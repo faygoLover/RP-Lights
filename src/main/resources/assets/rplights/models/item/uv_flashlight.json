@@ -1,0 +1,14 @@
+{
+  "parent": "item/handheld",
+  "textures": {
+    "layer0": "rplights:item/uv_flashlight"
+  },
+  "overrides": [
+    {
+      "predicate": {
+        "rplights:on": 1
+      },
+      "model": "rplights:item/uv_flashlight_on"
+    }
+  ]
+}

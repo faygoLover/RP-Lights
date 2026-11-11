@@ -1,0 +1,277 @@
+{
+  "multipart": [
+    {
+      "when": {
+        "facing": "north"
+      },
+      "apply": {
+        "model": "rplights:block/charger_base"
+      }
+    },
+    {
+      "when": {
+        "facing": "north",
+        "cells": "1|2|3|4"
+      },
+      "apply": {
+        "model": "rplights:block/charger_cell1"
+      }
+    },
+    {
+      "when": {
+        "facing": "north",
+        "cells": "2|3|4"
+      },
+      "apply": {
+        "model": "rplights:block/charger_cell2"
+      }
+    },
+    {
+      "when": {
+        "facing": "north",
+        "cells": "3|4"
+      },
+      "apply": {
+        "model": "rplights:block/charger_cell3"
+      }
+    },
+    {
+      "when": {
+        "facing": "north",
+        "cells": "4"
+      },
+      "apply": {
+        "model": "rplights:block/charger_cell4"
+      }
+    },
+    {
+      "when": {
+        "facing": "north",
+        "charging": "true"
+      },
+      "apply": {
+        "model": "rplights:block/charger_led_red"
+      }
+    },
+    {
+      "when": {
+        "facing": "north",
+        "charging": "false",
+        "cells": "1|2|3|4"
+      },
+      "apply": {
+        "model": "rplights:block/charger_led_green"
+      }
+    },
+    {
+      "when": {
+        "facing": "east"
+      },
+      "apply": {
+        "model": "rplights:block/charger_base",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "east",
+        "cells": "1|2|3|4"
+      },
+      "apply": {
+        "model": "rplights:block/charger_cell1",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "east",
+        "cells": "2|3|4"
+      },
+      "apply": {
+        "model": "rplights:block/charger_cell2",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "east",
+        "cells": "3|4"
+      },
+      "apply": {
+        "model": "rplights:block/charger_cell3",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "east",
+        "cells": "4"
+      },
+      "apply": {
+        "model": "rplights:block/charger_cell4",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "east",
+        "charging": "true"
+      },
+      "apply": {
+        "model": "rplights:block/charger_led_red",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "east",
+        "charging": "false",
+        "cells": "1|2|3|4"
+      },
+      "apply": {
+        "model": "rplights:block/charger_led_green",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "south"
+      },
+      "apply": {
+        "model": "rplights:block/charger_base",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "facing": "south",
+        "cells": "1|2|3|4"
+      },
+      "apply": {
+        "model": "rplights:block/charger_cell1",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "facing": "south",
+        "cells": "2|3|4"
+      },
+      "apply": {
+        "model": "rplights:block/charger_cell2",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "facing": "south",
+        "cells": "3|4"
+      },
+      "apply": {
+        "model": "rplights:block/charger_cell3",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "facing": "south",
+        "cells": "4"
+      },
+      "apply": {
+        "model": "rplights:block/charger_cell4",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "facing": "south",
+        "charging": "true"
+      },
+      "apply": {
+        "model": "rplights:block/charger_led_red",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "facing": "south",
+        "charging": "false",
+        "cells": "1|2|3|4"
+      },
+      "apply": {
+        "model": "rplights:block/charger_led_green",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "facing": "west"
+      },
+      "apply": {
+        "model": "rplights:block/charger_base",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "west",
+        "cells": "1|2|3|4"
+      },
+      "apply": {
+        "model": "rplights:block/charger_cell1",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "west",
+        "cells": "2|3|4"
+      },
+      "apply": {
+        "model": "rplights:block/charger_cell2",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "west",
+        "cells": "3|4"
+      },
+      "apply": {
+        "model": "rplights:block/charger_cell3",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "west",
+        "cells": "4"
+      },
+      "apply": {
+        "model": "rplights:block/charger_cell4",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "west",
+        "charging": "true"
+      },
+      "apply": {
+        "model": "rplights:block/charger_led_red",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "west",
+        "charging": "false",
+        "cells": "1|2|3|4"
+      },
+      "apply": {
+        "model": "rplights:block/charger_led_green",
+        "y": 270
+      }
+    }
+  ]
+}

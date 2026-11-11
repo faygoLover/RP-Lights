@@ -1,0 +1,6 @@
+{
+  "parent": "item/handheld",
+  "textures": {
+    "layer0": "rplights:item/dynamo_flashlight_on"
+  }
+}

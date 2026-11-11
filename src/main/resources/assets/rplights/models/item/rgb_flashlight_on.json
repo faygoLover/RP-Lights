@@ -1,0 +1,6 @@
+{
+  "parent": "item/handheld",
+  "textures": {
+    "layer0": "rplights:item/rgb_flashlight_on"
+  }
+}

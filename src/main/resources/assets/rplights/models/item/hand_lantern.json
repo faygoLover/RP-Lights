@@ -1,0 +1,14 @@
+{
+  "parent": "item/generated",
+  "textures": {
+    "layer0": "rplights:item/hand_lantern"
+  },
+  "overrides": [
+    {
+      "predicate": {
+        "rplights:on": 1
+      },
+      "model": "rplights:item/hand_lantern_on"
+    }
+  ]
+}

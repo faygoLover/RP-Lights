@@ -1,0 +1,67 @@
+{
+  "textures": {
+    "cell": "rplights:block/charger_cell",
+    "particle": "rplights:block/charger_cell"
+  },
+  "elements": [
+    {
+      "from": [
+        2,
+        3,
+        6
+      ],
+      "to": [
+        4,
+        8,
+        10
+      ],
+      "faces": {
+        "north": {
+          "texture": "#cell",
+          "uv": [
+            0,
+            0,
+            2,
+            5
+          ]
+        },
+        "south": {
+          "texture": "#cell",
+          "uv": [
+            2,
+            0,
+            4,
+            5
+          ]
+        },
+        "east": {
+          "texture": "#cell",
+          "uv": [
+            4,
+            0,
+            8,
+            5
+          ]
+        },
+        "west": {
+          "texture": "#cell",
+          "uv": [
+            8,
+            0,
+            12,
+            5
+          ]
+        },
+        "up": {
+          "texture": "#cell",
+          "uv": [
+            0,
+            0,
+            2,
+            2
+          ]
+        }
+      }
+    }
+  ]
+}
