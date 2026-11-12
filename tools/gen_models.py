@@ -390,14 +390,50 @@ def build(model, tex_name, render_type=None, display=None, parent=None, extra=No
         if ok:
             break
     img = Image.new('RGBA', (size, size), (0, 0, 0, 0))
+    # совпадающие грани: одна плоскость, одна сторона — у разных коробок цвет должен совпадать, иначе мерцание
+    seen = {}
+    clashes = set()
+
+    def cell_of(name, P):
+        return (name,) + tuple(round(P[q] * D * 2) for q in range(3))
+
+    # край — по общему силуэту плоскости (все грани той же стороны), а не по коробке: перекрытые грани красятся одинаково
+    covered = set()
+    for bx, name, (u0, v0, u1, v1), w, h, _ in faces:
+        for j in range(h):
+            for i in range(w):
+                covered.add(cell_of(name, texel_point(bx, name, u0 + (i + 0.5) / D, v0 + (j + 0.5) / D)))
+
+    def is_edge(name, P):
+        c = cell_of(name, P)
+        n = DIRS[name]
+        for q in range(3):
+            if n[q] != 0:
+                continue
+            for d in (-2, 2):
+                nb = list(c)
+                nb[q + 1] += d
+                if tuple(nb) not in covered:
+                    return True
+        return False
+
     for bx, name, (u0, v0, u1, v1), w, h, (ox, oy) in faces:
         n = DIRS[name]
         mat = bx['cap'] if bx['cap'] and bx['cyl'] and n['xyz'.index(bx['cyl'][0])] != 0 else bx['mat']
         for j in range(h):
             for i in range(w):
                 P = texel_point(bx, name, u0 + (i + 0.5) / D, v0 + (j + 0.5) / D)
-                edge = i == 0 or j == 0 or i == w - 1 or j == h - 1
-                img.putpixel((ox + i, oy + j), mat(Tx(P, n, edge, bx)))
+                edge = is_edge(name, P)
+                c = mat(Tx(P, n, edge, bx))
+                img.putpixel((ox + i, oy + j), c)
+                cell = (name, round(P[0] * D * 2), round(P[1] * D * 2), round(P[2] * D * 2))
+                prev = seen.get(cell)
+                if prev is None:
+                    seen[cell] = (id(bx), c, bx['emit'])
+                elif prev[0] != id(bx) and (prev[1] != c or prev[2] != bx['emit']):
+                    clashes.add((name, bx['a'], bx['b']))
+    if clashes:
+        raise SystemExit(f'{tex_name}: грани в одной плоскости с разным видом (мерцание): {sorted(clashes)[:6]}')
     img.save(os.path.join(TEX, tex_name + '.png'))
 
     k = 16.0 / size
@@ -599,7 +635,7 @@ def headlamp_parts(m, on, cx, cy, z_front, strap_mat):
     m.box((cx - 1.5, cy - 2.0, z_front + 0.5), (cx + 1.5, cy + 2.0, z_front + 2.5), housing)
     m.cyl('z', cx, cy, 1.5, z_front, z_front + 0.5, housing,
           cap=lens(off=not on, tint='#FFF1DC', glass='#A8B8C2', reflector='#DCE2E6', core=0.4), emit=on)
-    m.box((cx + 1.0, cy + 1.5, z_front + 1.0), (cx + 2.0, cy + 2.0, z_front + 2.0), paint('#C9452E', noise=0.05))
+    m.box((cx + 0.5, cy + 2.0, z_front + 1.0), (cx + 1.5, cy + 2.5, z_front + 2.0), paint('#C9452E', noise=0.05))
 
 
 def headlamp(on):
@@ -663,7 +699,7 @@ def dynamo(on):
           cap=lens(off=not on, tint='#FFDDB0', glass='#B6BFC2', reflector='#D8DDDF', core=0.45), emit=on)
     # рычаг: ось спереди, лапка вдоль низа
     lever = chrome(dark='#55595D', light='#E3E7EA', mid='#9DA3A8')
-    m.box((6.5, 5.0, 7.0), (9.5, 6.5, 8.0), DARK_STEEL)
+    m.box((6.5, 5.0, 7.0), (9.5, 6.0, 8.0), DARK_STEEL)
     m.box((6.5, 4.5, 8.0), (9.5, 5.5, 13.5), ribs(lever, period=2, along='z', dark=0.85))
     m.box((7.0, 5.5, 12.5), (9.0, 6.0, 13.5), lever)
     # петля для пальца сзади
@@ -681,14 +717,18 @@ def lamp_model(on, name='hurricane_lamp'):
     m.cyl('y', 8.0, 8.0, 3.0, 0.0, 2.0, tin, cap=paint('#365239', noise=0.05, k=0.0))
     m.cyl('y', 8.0, 8.0, 2.5, 2.0, 2.5, tin_dark, cap=tin_dark)
     # горелка, фитиль
-    m.cyl('y', 8.0, 8.0, 1.0, 2.5, 3.5, BRASS, cap=BRASS)
-    m.box((7.5, 3.5, 7.75 + 0.25), (8.5, 4.0, 8.5 - 0.5 + 0.5), paint('#2B2722', noise=0.1))
+    m.cyl('y', 8.0, 8.0, 1.0, 2.5, 3.0, BRASS, cap=BRASS)
+    m.box((7.5, 3.0, 7.5), (8.5, 3.5, 8.5), paint('#2B2722', noise=0.1))
     # стекло
-    m.cyl('y', 8.0, 8.0, 2.0, 3.0, 7.0, glass('#E6E2D2', alpha=70, streak=200), occlude=False)
+    lamp_glass = glass('#E6E2D2', alpha=70, streak=200)
+    m.cyl('y', 8.0, 8.0, 2.0, 3.0, 7.0, lamp_glass, occlude=False)
     # проволочная защита стекла
     for x0, z0 in ((5.5, 7.75 - 0.25), (10.0, 7.75 - 0.25), (7.75 - 0.25, 5.5), (7.75 - 0.25, 10.0)):
-        m.box((x0, 3.0, z0), (x0 + 0.5, 7.0, z0 + 0.5), wire)
-    m.cyl('y', 8.0, 8.0, 2.5, 5.0, 5.5, wire, cap=wire, skip=())
+        m.box((x0, 3.0, z0), (x0 + 0.5, 5.0, z0 + 0.5), wire)       # ниже и выше кольца
+        m.box((x0, 5.5, z0), (x0 + 0.5, 7.0, z0 + 0.5), wire)
+    for a, b in (((5.5, 5.0, 5.5), (10.5, 5.5, 6.0)), ((5.5, 5.0, 10.0), (10.5, 5.5, 10.5)),
+                 ((5.5, 5.0, 6.0), (6.0, 5.5, 10.0)), ((10.0, 5.0, 6.0), (10.5, 5.5, 10.0))):
+        m.box(a, b, wire)                                               # проволочное кольцо вокруг стекла
     # колпак и дымоход
     m.cyl('y', 8.0, 8.0, 2.5, 7.0, 8.0, tin, cap=tin)
     m.cyl('y', 8.0, 8.0, 1.5, 8.0, 8.5, tin_dark, cap=tin_dark)
@@ -704,14 +744,14 @@ def lamp_model(on, name='hurricane_lamp'):
     m.box((3.5, 8.0, 7.5), (4.0, 10.5, 8.0), wire)
     m.box((12.0, 8.0, 7.5), (12.5, 10.5, 8.0), wire)
     m.box((3.5, 10.5, 7.5), (12.5, 11.0, 8.0), wire)
-    m.box((6.5, 10.5, 7.25 + 0.25), (9.5, 11.5, 8.5), paint('#8E6A3A', noise=0.08))   # деревянная ручка
+    m.box((6.5, 10.0, 7.0), (9.5, 11.5, 8.5), paint('#8E6A3A', noise=0.08))   # деревянная ручка вокруг дужки
     # ручка фитиля
     m.box((10.5, 2.0, 7.5), (11.5, 3.0, 8.5), BRASS)
     if on:
         flame_core = flat('#FFF1C2')
         flame = paint('#FFB347', noise=0.12, edge=0.0, k=0.0)
-        m.box((7.5, 4.0, 7.5), (8.5, 5.5, 8.5), flame, emit=True, occlude=False)
-        m.box((7.5, 5.5, 8.0), (8.0, 6.5, 8.5), flame_core, emit=True, occlude=False)
+        m.box((7.5, 3.5, 7.5), (8.5, 5.0, 8.5), flame, emit=True, occlude=False)
+        m.box((7.5, 5.0, 8.0), (8.0, 6.0, 8.5), flame_core, emit=True, occlude=False)
     return m
 
 
@@ -724,7 +764,7 @@ def uv_flashlight(on):
     m.cyl('z', 8.0, 8.0, 2.0, 3.0, 3.5, alu,
           cap=lens(off=not on, tint='#B07CFF', glass='#4A3B6E', reflector='#7E6AA8', core=0.5), emit=on)
     m.box((9.5, 7.5, 8.0), (10.0, 8.5, 13.0), paint('#9AA2AA', noise=0.04))           # клипса
-    m.box((7.5, 9.5, 5.0), (8.5, 10.0, 6.0), paint('#8F63E0', noise=0.04))           # фиолетовое кольцо-метка
+    m.box((7.5, 10.0, 5.0), (8.5, 10.5, 6.0), paint('#8F63E0', noise=0.04))           # фиолетовое кольцо-метка
     return m
 
 
@@ -771,19 +811,23 @@ def bulb(burnt):
     m.cyl('y', 8.0, 8.0, 1.0, 2.0, 2.5, paint('#3A3A3A', noise=0.05), cap=paint('#B48A3C', noise=0.05))   # контакт
     m.cyl('y', 8.0, 8.0, 1.5, 2.5, 5.5, thread, cap=thread)
     # колба
-    g = glass('#E9EEF0' if not burnt else '#BFC3C4', alpha=80, streak=200)
+    g0 = glass('#E9EEF0' if not burnt else '#BFC3C4', alpha=80, streak=200)
+    soot = glass('#3B3530', alpha=150, streak=150)
+
+    def g(tx):
+        # у перегоревшей верх колбы в копоти
+        return soot(tx) if burnt and tx.P[1] > 8.5 else g0(tx)
     m.cyl('y', 8.0, 8.0, 2.0, 5.5, 6.5, g, occlude=False)
     m.cyl('y', 8.0, 8.0, 3.0, 6.5, 10.0, g, occlude=False)
     m.cyl('y', 8.0, 8.0, 2.0, 10.0, 11.0, g, occlude=False)
     # нить
     fil = flat('#5B4A33') if not burnt else flat('#2A2622')
-    m.box((7.75 - 0.25, 6.5, 8.0 - 0.5 + 0.5 - 0.0), (8.0, 9.0, 8.5), paint('#6E6A62', noise=0.05))
-    m.box((8.0, 6.5, 7.5), (8.5, 9.0, 8.0), paint('#6E6A62', noise=0.05))
+    m.box((7.5, 6.0, 8.0), (8.0, 9.0, 8.5), paint('#6E6A62', noise=0.05))
+    m.box((8.0, 6.0, 7.5), (8.5, 9.0, 8.0), paint('#6E6A62', noise=0.05))
     if not burnt:
         m.box((7.5, 9.0, 7.5), (8.5, 9.5, 8.5), fil)
     else:
         m.box((7.5, 9.0, 7.5), (8.0, 9.5, 8.0), fil)
-        m.cyl('y', 8.0, 8.0, 2.5, 9.5, 10.0, glass('#3B3530', alpha=150, streak=150), occlude=False)  # копоть
     return m, 'minecraft:translucent'
 
 
@@ -814,22 +858,49 @@ def tester():
     return m
 
 
-MARKER_CAPS = {'blue': '#3F6FD8', 'green': '#3FAF4A', 'yellow': '#E6C62E', 'orange': '#E8822A',
-               'pink': '#E85A9E', 'violet': '#7A4BC8', 'red': '#D23A32', 'white': '#E9E9EE'}
+# обычные маркеры: цвет чернил (корпус-полоса, колпачок, стержень)
+MARKER_COLOURS = {'black': '#26262A', 'red': '#C8302A', 'blue': '#2A52C8', 'green': '#2E8B3A',
+                  'yellow': '#E6C62E', 'orange': '#E8822A', 'violet': '#7A3FB8', 'white': '#ECECEC'}
 
 
-def ink_marker(colour):
-    """Маркер: светлый корпус, колпачок и полоса цвета чернил."""
-    m = Model('uv_marker_' + colour)
-    cap_hex = MARKER_CAPS[colour]
-    body = paint('#D8D8D2', noise=0.03, edge=-0.08, k=0.3)
-    cap = paint(cap_hex, noise=0.04, edge=-0.08, k=0.3)
+def uv_marker():
+    """УФ-маркер: тонкий светлый корпус с фиолетовой полосой «УФ», фиолетовый колпачок. Всё рисунком, без накладок."""
+    m = Model('uv_marker')
+    violet = '#6B46B8'
+
+    def body(tx):
+        z = tx.P[2]
+        if tx.n[2] == 0 and 5.0 <= z <= 6.5:
+            c = paint(violet, noise=0.03, k=0.3)(tx)
+            if 5.5 <= z <= 6.0 and tx.noise(5) < 0.3:
+                c = hexc('#F2EEFF')
+            return c
+        return paint('#D8D8D2', noise=0.03, k=0.3)(tx)
+    cap = paint(violet, noise=0.04, k=0.3)
     m.cyl('z', 8.0, 8.0, 1.0, 3.5, 13.0, body, cap=body)
     m.cyl('z', 8.0, 8.0, 1.5, 13.0, 15.0, cap, cap=cap)
-    m.box((8.0, 9.0, 12.0), (8.5, 9.5, 14.5), cap)                                   # клипса
-    m.cyl('z', 8.0, 8.0, 0.5, 2.0, 3.5, paint('#3B3B40', noise=0.08), cap=paint('#3B3B40', noise=0.08))
-    m.box((7.5, 7.0, 6.0), (8.5, 7.5, 11.0), paint(cap_hex, noise=0.03))             # полоса
-    m.box((7.5, 8.5, 5.0), (8.5, 9.0, 6.0), paint('#6B46B8', noise=0.03))            # метка «УФ»
+    m.box((7.5, 9.5, 12.5), (8.5, 10.0, 14.5), cap)                                  # клипса над колпачком
+    m.cyl('z', 8.0, 8.0, 0.5, 2.0, 3.5, paint('#3E2A6E', noise=0.08), cap=paint('#3E2A6E', noise=0.08))
+    return m
+
+
+def marker(colour):
+    """Обычный маркер: толще, белый корпус с полосой цвета, колпачок и стержень цвета чернил."""
+    m = Model('marker_' + colour)
+    ink = MARKER_COLOURS[colour]
+    trim = '#3A3A3E' if colour == 'white' else ink
+
+    def body(tx):
+        z = tx.P[2]
+        if tx.n[2] == 0 and 6.0 <= z <= 11.0:
+            return paint(trim, noise=0.03, k=0.3)(tx)
+        return paint('#E6E6E0', noise=0.03, k=0.3)(tx)
+    cap = paint(ink, noise=0.04, k=0.3)
+    m.cyl('z', 8.0, 8.0, 1.5, 3.5, 12.5, body, cap=body)
+    m.cyl('z', 8.0, 8.0, 2.0, 12.5, 15.5, cap, cap=cap)
+    m.box((7.5, 10.0, 12.5), (8.5, 10.5, 15.0), cap)                                 # клипса над колпачком
+    m.cyl('z', 8.0, 8.0, 1.0, 2.5, 3.5, paint('#BDBDB6', noise=0.05), cap=paint('#BDBDB6', noise=0.05))
+    m.box((7.5, 7.5, 1.0), (8.5, 8.5, 2.5), paint(ink, noise=0.06, k=0.0))           # стержень-«долото»
     return m
 
 
@@ -938,9 +1009,11 @@ def main():
     t = tester()
     jdump(os.path.join(MOD_ITEM, 'battery_tester.json'),
           build(t, 'battery_tester', display=thing(t, gui_rotation=(30, 200, 0), gui_fill=15.0)))
-    for colour in MARKER_CAPS:
-        mk = ink_marker(colour)
-        nm = 'uv_marker' if colour == 'blue' else 'uv_marker_' + colour
+    mk = uv_marker()
+    jdump(os.path.join(MOD_ITEM, 'uv_marker.json'), build(mk, 'uv_marker', display=held(mk, grip=(8.0, 8.0, 10.0))))
+    for colour in MARKER_COLOURS:
+        mk = marker(colour)
+        nm = 'marker_' + colour
         jdump(os.path.join(MOD_ITEM, nm + '.json'), build(mk, nm, display=held(mk, grip=(8.0, 8.0, 10.0))))
     sp = sponge()
     jdump(os.path.join(MOD_ITEM, 'ink_sponge.json'), build(sp, 'ink_sponge', display=thing(sp, gui_fill=13.0)))

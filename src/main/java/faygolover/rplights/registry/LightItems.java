@@ -58,18 +58,20 @@ public final class LightItems {
     @SuppressWarnings("DataFlowIssue")
     public static final RegistryObject<BlockEntityType<LampBlockEntity>> LAMP_BE = BLOCK_ENTITIES.register("hurricane_lamp",
             () -> BlockEntityType.Builder.of(LampBlockEntity::new, LAMP_BLOCK.get()).build(null));
-    /** Маркеры невидимых чернил: синий — {@code uv_marker}, остальные — {@code uv_marker_<цвет>}. */
+    /** УФ-маркер (невидимые чернила). */
+    public static final RegistryObject<Item> UV_MARKER = ITEMS.register("uv_marker",
+            () -> new InkToolItem(new Item.Properties().stacksTo(1).durability(InkToolItem.INK), 0));
+    /** Обычные маркеры: {@code marker_<цвет>}, вид 1..8. */
     public static final java.util.List<RegistryObject<Item>> MARKERS = markers();
-    public static final RegistryObject<Item> UV_MARKER = MARKERS.get(0);
     public static final RegistryObject<Item> INK_SPONGE = ITEMS.register("ink_sponge",
             () -> new InkToolItem(new Item.Properties().stacksTo(1), -1));
 
     private static java.util.List<RegistryObject<Item>> markers() {
         java.util.List<RegistryObject<Item>> out = new java.util.ArrayList<>();
         for (int i = 0; i < InkToolItem.COLOR_IDS.length; i++) {
-            int color = i;
-            String id = i == 0 ? "uv_marker" : "uv_marker_" + InkToolItem.COLOR_IDS[i];
-            out.add(ITEMS.register(id, () -> new InkToolItem(new Item.Properties().stacksTo(1).durability(InkToolItem.INK), color)));
+            int kind = i + 1;
+            out.add(ITEMS.register("marker_" + InkToolItem.COLOR_IDS[i],
+                    () -> new InkToolItem(new Item.Properties().stacksTo(1).durability(InkToolItem.INK), kind)));
         }
         return java.util.List.copyOf(out);
     }

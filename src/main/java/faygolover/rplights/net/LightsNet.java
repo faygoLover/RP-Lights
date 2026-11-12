@@ -23,7 +23,7 @@ import java.util.function.Supplier;
 public final class LightsNet {
     private LightsNet() {}
 
-    private static final String VERSION = "2";
+    private static final String VERSION = "3";
     public static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(new ResourceLocation(RpLights.MODID, "main"),
             () -> VERSION, VERSION::equals, VERSION::equals);
 
@@ -33,11 +33,12 @@ public final class LightsNet {
                 java.util.Optional.of(NetworkDirection.PLAY_TO_CLIENT));
     }
 
-    /** Чернила чанка: {@code remove == null} — весь чанк заново (= add), иначе добавить и стереть точки. */
-    public record InkDelta(long chunk, int[] add, int[] remove) {
+    /** Чернила чанка: места и виды добавленных; {@code remove == null} — весь чанк заново, иначе ещё и стереть места. */
+    public record InkDelta(long chunk, int[] add, byte[] kinds, int[] remove) {
         void write(FriendlyByteBuf b) {
             b.writeLong(chunk);
             b.writeVarIntArray(add);
+            b.writeByteArray(kinds);
             b.writeBoolean(remove != null);
             if (remove != null) b.writeVarIntArray(remove);
         }
@@ -45,12 +46,13 @@ public final class LightsNet {
         static InkDelta read(FriendlyByteBuf b) {
             long c = b.readLong();
             int[] add = b.readVarIntArray(InkData.MAX_PER_CHUNK);
+            byte[] kinds = b.readByteArray(InkData.MAX_PER_CHUNK);
             int[] remove = b.readBoolean() ? b.readVarIntArray(InkData.MAX_PER_CHUNK) : null;
-            return new InkDelta(c, add, remove);
+            return new InkDelta(c, add, kinds, remove);
         }
 
         void handle(Supplier<NetworkEvent.Context> ctx) {
-            ctx.get().enqueueWork(() -> faygolover.rplights.client.InkClient.apply(chunk, add, remove));
+            ctx.get().enqueueWork(() -> faygolover.rplights.client.InkClient.apply(chunk, add, kinds, remove));
             ctx.get().setPacketHandled(true);
         }
     }

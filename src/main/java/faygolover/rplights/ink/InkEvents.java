@@ -18,9 +18,10 @@ public final class InkEvents {
 
     @SubscribeEvent
     public static void onWatch(ChunkWatchEvent.Watch e) {
-        int[] dots = InkData.get(e.getLevel()).chunk(e.getPos().toLong());
+        Object[] dots = InkData.get(e.getLevel()).chunk(e.getPos().toLong());
         if (dots != null) {
-            LightsNet.CHANNEL.send(PacketDistributor.PLAYER.with(e::getPlayer), new LightsNet.InkDelta(e.getPos().toLong(), dots, null));
+            LightsNet.CHANNEL.send(PacketDistributor.PLAYER.with(e::getPlayer),
+                    new LightsNet.InkDelta(e.getPos().toLong(), (int[]) dots[0], (byte[]) dots[1], null));
         }
     }
 

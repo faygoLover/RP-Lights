@@ -1,6 +1,7 @@
 package faygolover.rplights.ink;
 
 import faygolover.rplights.net.LightsNet;
+import it.unimi.dsi.fastutil.bytes.ByteArrayList;
 import it.unimi.dsi.fastutil.ints.Int2ByteOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
@@ -15,15 +16,14 @@ import net.minecraft.world.level.saveddata.SavedData;
 import net.minecraftforge.network.PacketDistributor;
 
 /**
- * Невидимые чернила мира: точки 1/16 блока на гранях блоков, по чанкам. Место точки — int: x 4 бита, z 4, y+512 10,
- * грань 3, u 4, v 4 (29 бит); цвет (0..7) — отдельно, по сети и в сохранении — в старших 3 битах ({@link #packed}).
- * На клетке одна точка: другой цвет её перекрашивает. Видны только в луче УФ-фонаря (клиент, {@code InkClient}).
+ * Чернила на блоках: точки 1/16 блока на гранях, по чанкам. Место точки — int: x 4 бита, z 4, y+512 10, грань 3,
+ * u 4, v 4. Вид точки — byte: {@link #UV} — невидимые (светятся только в луче УФ-фонаря), 1..8 — обычные цвета
+ * маркеров ({@code InkClient}). На клетке одна точка: другой вид поверх её заменяет. Стирает губка.
  */
 public final class InkData extends SavedData {
     public static final String NAME = "rplights_ink";
     public static final int MAX_PER_CHUNK = 4096;
-    public static final int COLORS = 8;
-    private static final int PLACE_MASK = (1 << 29) - 1;
+    public static final byte UV = 0;
     private static final int BLOCK_MASK = (1 << 18) - 1;
 
     private final Long2ObjectOpenHashMap<Int2ByteOpenHashMap> chunks = new Long2ObjectOpenHashMap<>();
@@ -37,19 +37,6 @@ public final class InkData extends SavedData {
     public static int key(BlockPos pos, Direction face, int u, int v) {
         return (pos.getX() & 15) | (pos.getZ() & 15) << 4 | ((pos.getY() + 512) & 0x3FF) << 8
                 | face.get3DDataValue() << 18 | (u & 15) << 21 | (v & 15) << 25;
-    }
-
-    /** Место и цвет в одном int. */
-    public static int packed(int place, int color) {
-        return (place & PLACE_MASK) | (color & 7) << 29;
-    }
-
-    public static int place(int packed) {
-        return packed & PLACE_MASK;
-    }
-
-    public static int color(int packed) {
-        return (packed >>> 29) & 7;
     }
 
     public static BlockPos pos(int key, int chunkX, int chunkZ) {
@@ -85,23 +72,25 @@ public final class InkData extends SavedData {
 
     // ------------------------------------------------------------------ правка
 
-    /** Поставить точки грани цветом {@code color}; возвращает, сколько новых или перекрашенных (на них тратятся чернила). */
-    public int add(ServerLevel level, BlockPos pos, Direction face, int[][] cells, int color) {
+    /** Поставить точки грани видом {@code kind}; возвращает, сколько новых или заменённых (на них тратятся чернила). */
+    public int add(ServerLevel level, BlockPos pos, Direction face, int[][] cells, byte kind) {
         long c = ChunkPos.asLong(pos.getX() >> 4, pos.getZ() >> 4);
         Int2ByteOpenHashMap set = chunks.computeIfAbsent(c, k -> new Int2ByteOpenHashMap());
         IntArrayList added = new IntArrayList();
+        ByteArrayList kinds = new ByteArrayList();
         for (int[] uv : cells) {
             int k = key(pos, face, uv[0], uv[1]);
             boolean had = set.containsKey(k);
-            if (had && set.get(k) == color) continue;
+            if (had && set.get(k) == kind) continue;
             if (!had && set.size() >= MAX_PER_CHUNK) break;
-            set.put(k, (byte) color);
-            added.add(packed(k, color));
+            set.put(k, kind);
+            added.add(k);
+            kinds.add(kind);
         }
         if (set.isEmpty()) chunks.remove(c);
         if (!added.isEmpty()) {
             setDirty();
-            send(level, pos, added.toIntArray(), new int[0]);
+            send(level, pos, added.toIntArray(), kinds.toByteArray(), new int[0]);
         }
         return added.size();
     }
@@ -143,26 +132,27 @@ public final class InkData extends SavedData {
         if (removed.isEmpty()) return;
         if (set.isEmpty()) chunks.remove(c);
         setDirty();
-        send(level, pos, new int[0], removed.toIntArray());
+        send(level, pos, new int[0], new byte[0], removed.toIntArray());
     }
 
-    private static void send(ServerLevel level, BlockPos pos, int[] add, int[] remove) {
+    private static void send(ServerLevel level, BlockPos pos, int[] add, byte[] kinds, int[] remove) {
         long c = ChunkPos.asLong(pos.getX() >> 4, pos.getZ() >> 4);
         LightsNet.CHANNEL.send(PacketDistributor.TRACKING_CHUNK.with(() -> level.getChunkAt(pos)),
-                new LightsNet.InkDelta(c, add, remove));
+                new LightsNet.InkDelta(c, add, kinds, remove));
     }
 
-    /** Точки чанка с цветом ({@link #packed}) — для игрока, который его увидел; или null. */
-    public int[] chunk(long c) {
+    /** Точки чанка — для игрока, который его увидел: {места, виды} или null. */
+    public Object[] chunk(long c) {
         Int2ByteOpenHashMap set = chunks.get(c);
-        return set == null || set.isEmpty() ? null : packAll(set);
-    }
-
-    private static int[] packAll(Int2ByteOpenHashMap set) {
-        int[] out = new int[set.size()];
+        if (set == null || set.isEmpty()) return null;
+        int[] places = new int[set.size()];
+        byte[] kinds = new byte[set.size()];
         int i = 0;
-        for (var e : set.int2ByteEntrySet()) out[i++] = packed(e.getIntKey(), e.getByteValue());
-        return out;
+        for (var e : set.int2ByteEntrySet()) {
+            places[i] = e.getIntKey();
+            kinds[i++] = e.getByteValue();
+        }
+        return new Object[]{places, kinds};
     }
 
     // ------------------------------------------------------------------ сохранение
@@ -172,8 +162,10 @@ public final class InkData extends SavedData {
         ListTag list = tag.getList("Chunks", Tag.TAG_COMPOUND);
         for (int i = 0; i < list.size(); i++) {
             CompoundTag ct = list.getCompound(i);
+            int[] places = ct.getIntArray("D");
+            byte[] kinds = ct.getByteArray("K");
             Int2ByteOpenHashMap set = new Int2ByteOpenHashMap();
-            for (int p : ct.getIntArray("D")) set.put(place(p), (byte) color(p));
+            for (int j = 0; j < places.length; j++) set.put(places[j], j < kinds.length ? kinds[j] : UV);
             if (!set.isEmpty()) d.chunks.put(ct.getLong("C"), set);
         }
         return d;
@@ -183,10 +175,12 @@ public final class InkData extends SavedData {
     public CompoundTag save(CompoundTag tag) {
         ListTag list = new ListTag();
         for (var e : chunks.long2ObjectEntrySet()) {
-            if (e.getValue().isEmpty()) continue;
+            Object[] pk = chunk(e.getLongKey());
+            if (pk == null) continue;
             CompoundTag ct = new CompoundTag();
             ct.putLong("C", e.getLongKey());
-            ct.putIntArray("D", packAll(e.getValue()));
+            ct.putIntArray("D", (int[]) pk[0]);
+            ct.putByteArray("K", (byte[]) pk[1]);
             list.add(ct);
         }
         tag.put("Chunks", list);

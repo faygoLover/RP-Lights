@@ -20,14 +20,7 @@ LIGHTS = {
     'rplights:hurricane_lamp': 0.7,
     'rplights:uv_flashlight': 0.35,
     'rplights:rgb_flashlight': 0.12,
-    'rplights:uv_marker': 0.2,
-    'rplights:uv_marker_green': 0.06,
-    'rplights:uv_marker_yellow': 0.06,
-    'rplights:uv_marker_orange': 0.06,
-    'rplights:uv_marker_pink': 0.06,
-    'rplights:uv_marker_violet': 0.06,
-    'rplights:uv_marker_red': 0.06,
-    'rplights:uv_marker_white': 0.06,
+    'rplights:uv_marker': 0.3,
 }
 # предмет: (доля шанса батарейки SA, сколько штук)
 SUPPLIES = {
@@ -36,6 +29,14 @@ SUPPLIES = {
     'rplights:battery_tester': (0.12, (1, 1)),
     'rplights:charger': (0.06, (1, 1)),
     'rplights:ink_sponge': (0.15, (1, 1)),
+    'rplights:marker_black': (0.1, (1, 1)),
+    'rplights:marker_red': (0.08, (1, 1)),
+    'rplights:marker_blue': (0.08, (1, 1)),
+    'rplights:marker_green': (0.06, (1, 1)),
+    'rplights:marker_yellow': (0.05, (1, 1)),
+    'rplights:marker_orange': (0.04, (1, 1)),
+    'rplights:marker_violet': (0.04, (1, 1)),
+    'rplights:marker_white': (0.04, (1, 1)),
 }
 
 

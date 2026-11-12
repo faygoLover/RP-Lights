@@ -11,8 +11,8 @@ import it.unimi.dsi.fastutil.longs.Long2ByteOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
@@ -30,27 +30,33 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Невидимые чернила у клиента: точки чанков с сервера; рисуются только там, куда падает луч УФ-фонаря (свой или
- * чужой): чем ближе к оси и к лампе — тем ярче, на гранях, повёрнутых к лампе, не за стеной. Свечение — цветом маркера,
- * складывается со светом; отступ от грани растёт с расстоянием (без мерцания).
+ * Чернила у клиента: точки чанков с сервера.
+ * <ul>
+ *   <li>Обычные (маркеры цветов) — как краска на блоке: светом мира (ночью темнеют), с тенью грани, до 64 блоков.</li>
+ *   <li>УФ — только там, куда падает луч УФ-фонаря (свой или чужой): ярче у оси и близко, на гранях к лампе, не за
+ *   стеной; голубовато-белое свечение складывается со светом.</li>
+ * </ul>
+ * Сдвиг глубины слоя ({@link InkRenderTypes}) плюс отступ от грани, растущий с расстоянием, — без мерцания.
  */
 public final class InkClient {
     private InkClient() {}
 
     private static final Long2ObjectOpenHashMap<Int2ByteOpenHashMap> CHUNKS = new Long2ObjectOpenHashMap<>();
-    /** Свечение по цвету чернил: синий, зелёный, жёлтый, оранжевый, розовый, фиолетовый, красный, белый. */
-    private static final float[][] GLOW = {
-            {0.55f, 0.82f, 1.0f}, {0.45f, 1.0f, 0.45f}, {1.0f, 0.95f, 0.35f}, {1.0f, 0.6f, 0.22f},
-            {1.0f, 0.42f, 0.72f}, {0.72f, 0.48f, 1.0f}, {1.0f, 0.28f, 0.25f}, {0.95f, 0.95f, 1.0f}};
+    /** Цвета обычных чернил (вид 1..8): чёрный, красный, синий, зелёный, жёлтый, оранжевый, фиолетовый, белый. */
+    private static final float[][] PAINT = {
+            {0.12f, 0.12f, 0.14f}, {0.78f, 0.17f, 0.15f}, {0.16f, 0.30f, 0.78f}, {0.17f, 0.52f, 0.22f},
+            {0.90f, 0.78f, 0.17f}, {0.92f, 0.50f, 0.15f}, {0.47f, 0.24f, 0.72f}, {0.93f, 0.93f, 0.93f}};
+    private static final float[] UV_GLOW = {0.55f, 0.82f, 1.0f};
     private static final float GAIN = 2.6f;
+    private static final double PAINT_RANGE = 64.0;
     /** Видимость граней для лампы в этом кадре (pos+грань → 1 видна, 2 нет). */
     private static final Long2ByteOpenHashMap SEEN = new Long2ByteOpenHashMap();
 
-    /** С сервера: {@code remove == null} — весь чанк заново; добавленные — с цветом, стёртые — только место. */
-    public static void apply(long chunk, int[] add, int[] remove) {
+    /** С сервера: {@code remove == null} — весь чанк заново. */
+    public static void apply(long chunk, int[] add, byte[] kinds, int[] remove) {
         Int2ByteOpenHashMap set = remove == null ? new Int2ByteOpenHashMap() : CHUNKS.computeIfAbsent(chunk, k -> new Int2ByteOpenHashMap());
-        for (int p : add) set.put(InkData.place(p), (byte) InkData.color(p));
-        if (remove != null) for (int k : remove) set.remove(InkData.place(k));
+        for (int i = 0; i < add.length; i++) set.put(add[i], i < kinds.length ? kinds[i] : InkData.UV);
+        if (remove != null) for (int k : remove) set.remove(k);
         if (set.isEmpty()) CHUNKS.remove(chunk);
         else CHUNKS.put(chunk, set);
     }
@@ -71,19 +77,53 @@ public final class InkClient {
         if (LatePass.deferred(e) || e.getStage() != RenderLevelStageEvent.Stage.AFTER_TRANSLUCENT_BLOCKS) return;
         Minecraft mc = Minecraft.getInstance();
         if (mc.level == null || mc.player == null || CHUNKS.isEmpty()) return;
-        List<LightBeams.Spec> uv = new ArrayList<>();
-        for (ClientBeams.Lamp l : ClientBeams.frame(mc, e.getPartialTick())) {
-            if (l.type() == LightType.UV) uv.add(l.spec());
-        }
-        if (uv.isEmpty()) return;
-
         Vec3 cam = e.getCamera().getPosition();
         PoseStack ps = e.getPoseStack();
         ps.pushPose();
         ps.translate(-cam.x, -cam.y, -cam.z);
         Matrix4f m = ps.last().pose();
         MultiBufferSource.BufferSource buffers = mc.renderBuffers().bufferSource();
-        VertexConsumer vc = buffers.getBuffer(RenderType.lightning());
+        paint(mc, buffers.getBuffer(InkRenderTypes.PAINT), m, cam);
+        buffers.endBatch(InkRenderTypes.PAINT);
+        List<LightBeams.Spec> uv = new ArrayList<>();
+        for (ClientBeams.Lamp l : ClientBeams.frame(mc, e.getPartialTick())) {
+            if (l.type() == LightType.UV) uv.add(l.spec());
+        }
+        if (!uv.isEmpty()) {
+            glow(mc, buffers.getBuffer(InkRenderTypes.GLOW), m, cam, uv);
+            buffers.endBatch(InkRenderTypes.GLOW);
+        }
+        ps.popPose();
+    }
+
+    /** Обычные чернила: все видимые точки рядом, со светом мира у грани. */
+    private static void paint(Minecraft mc, VertexConsumer vc, Matrix4f m, Vec3 cam) {
+        int r = (int) PAINT_RANGE;
+        int cx0 = Mth.floor(cam.x - r) >> 4, cx1 = Mth.floor(cam.x + r) >> 4;
+        int cz0 = Mth.floor(cam.z - r) >> 4, cz1 = Mth.floor(cam.z + r) >> 4;
+        double r2 = PAINT_RANGE * PAINT_RANGE;
+        for (int cx = cx0; cx <= cx1; cx++) {
+            for (int cz = cz0; cz <= cz1; cz++) {
+                Int2ByteOpenHashMap dots = CHUNKS.get(ChunkPos.asLong(cx, cz));
+                if (dots == null) continue;
+                for (var en : dots.int2ByteEntrySet()) {
+                    int kind = en.getByteValue();
+                    if (kind <= InkData.UV || kind > PAINT.length) continue;
+                    int k = en.getIntKey();
+                    BlockPos pos = InkData.pos(k, cx, cz);
+                    if (cam.distanceToSqr(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5) > r2) continue;
+                    Direction face = InkData.face(k);
+                    int light = LevelRenderer.getLightColor(mc.level, pos.relative(face));
+                    float shade = mc.level.getShade(face, true);
+                    float[] c = PAINT[kind - 1];
+                    quad(vc, m, pos, face, InkData.u(k), InkData.v(k), c[0] * shade, c[1] * shade, c[2] * shade, 0.93f, light, cam);
+                }
+            }
+        }
+    }
+
+    /** УФ-чернила: только в лучах УФ-фонарей. */
+    private static void glow(Minecraft mc, VertexConsumer vc, Matrix4f m, Vec3 cam, List<LightBeams.Spec> uv) {
         SEEN.clear();
         int rays = 0;
         for (LightBeams.Spec s : uv) {
@@ -96,6 +136,7 @@ public final class InkClient {
                     Int2ByteOpenHashMap dots = CHUNKS.get(ChunkPos.asLong(cx, cz));
                     if (dots == null) continue;
                     for (var en : dots.int2ByteEntrySet()) {
+                        if (en.getByteValue() != InkData.UV) continue;
                         int k = en.getIntKey();
                         BlockPos pos = InkData.pos(k, cx, cz);
                         Direction face = InkData.face(k);
@@ -129,13 +170,11 @@ public final class InkClient {
                             SEEN.put(faceKey, vis);
                         }
                         if (vis != 1) continue;
-                        quad(vc, m, pos, face, u, v, a, GLOW[en.getByteValue() & 7], cam);
+                        quad(vc, m, pos, face, u, v, UV_GLOW[0], UV_GLOW[1], UV_GLOW[2], a, -1, cam);
                     }
                 }
             }
         }
-        ps.popPose();
-        buffers.endBatch(RenderType.lightning());
     }
 
     private static double[] centre(BlockPos pos, Direction face, int u, int v) {
@@ -149,14 +188,14 @@ public final class InkClient {
         };
     }
 
-    private static void quad(VertexConsumer vc, Matrix4f m, BlockPos pos, Direction face, int u, int v, float a, float[] col, Vec3 cam) {
+    /** Клетка 1/16 на грани; {@code light} < 0 — без карты света (формат слоя УФ). */
+    private static void quad(VertexConsumer vc, Matrix4f m, BlockPos pos, Direction face, int u, int v,
+                             float r, float g, float b, float a, int light, Vec3 cam) {
         float a0 = u / 16.0f, a1 = (u + 1) / 16.0f, b0 = v / 16.0f, b1 = (v + 1) / 16.0f;
-        // отступ от грани растёт с расстоянием — иначе мерцает с гранью (точность глубины)
         double dist = Math.sqrt(cam.distanceToSqr(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5));
-        float eps = (float) (0.006 + dist * 0.0012);
+        float eps = (float) (0.003 + dist * 0.0006);
         float x = pos.getX(), y = pos.getY(), z = pos.getZ();
-        boolean pos_ = face.getAxisDirection() == Direction.AxisDirection.POSITIVE;
-        float off = pos_ ? 1.0f + eps : -eps;
+        float off = face.getAxisDirection() == Direction.AxisDirection.POSITIVE ? 1.0f + eps : -eps;
         float[][] p = new float[4][];
         switch (face.getAxis()) {
             case Y -> {
@@ -178,8 +217,10 @@ public final class InkClient {
                 p[3] = new float[]{x + off, y + b1, z + a0};
             }
         }
-        // обе стороны — без забот о порядке обхода
-        for (int i = 0; i < 4; i++) vc.vertex(m, p[i][0], p[i][1], p[i][2]).color(col[0], col[1], col[2], a).endVertex();
-        for (int i = 3; i >= 0; i--) vc.vertex(m, p[i][0], p[i][1], p[i][2]).color(col[0], col[1], col[2], a).endVertex();
+        for (int i = 0; i < 4; i++) {
+            VertexConsumer c = vc.vertex(m, p[i][0], p[i][1], p[i][2]).color(r, g, b, a);
+            if (light >= 0) c.uv2(light);
+            c.endVertex();
+        }
     }
 }
