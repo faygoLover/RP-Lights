@@ -6,7 +6,7 @@ import faygolover.flrender.api.LightBeams;
 import faygolover.flrender.render.LatePass;
 import faygolover.rplights.ink.InkData;
 import faygolover.rplights.light.LightType;
-import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import it.unimi.dsi.fastutil.ints.Int2ByteOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2ByteOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import net.minecraft.client.Minecraft;
@@ -31,30 +31,28 @@ import java.util.List;
 
 /**
  * Невидимые чернила у клиента: точки чанков с сервера; рисуются только там, куда падает луч УФ-фонаря (свой или
- * чужой): чем ближе к оси и к лампе — тем ярче, на гранях, повёрнутых к лампе, не за стеной. Свечение голубовато-белое,
- * складывается со светом (без глубины поверх — только у самой грани).
+ * чужой): чем ближе к оси и к лампе — тем ярче, на гранях, повёрнутых к лампе, не за стеной. Свечение — цветом маркера,
+ * складывается со светом; отступ от грани растёт с расстоянием (без мерцания).
  */
 public final class InkClient {
     private InkClient() {}
 
-    private static final Long2ObjectOpenHashMap<IntOpenHashSet> CHUNKS = new Long2ObjectOpenHashMap<>();
-    private static final float R = 0.62f, G = 0.9f, B = 1.0f;
+    private static final Long2ObjectOpenHashMap<Int2ByteOpenHashMap> CHUNKS = new Long2ObjectOpenHashMap<>();
+    /** Свечение по цвету чернил: синий, зелёный, жёлтый, оранжевый, розовый, фиолетовый, красный, белый. */
+    private static final float[][] GLOW = {
+            {0.55f, 0.82f, 1.0f}, {0.45f, 1.0f, 0.45f}, {1.0f, 0.95f, 0.35f}, {1.0f, 0.6f, 0.22f},
+            {1.0f, 0.42f, 0.72f}, {0.72f, 0.48f, 1.0f}, {1.0f, 0.28f, 0.25f}, {0.95f, 0.95f, 1.0f}};
     private static final float GAIN = 2.6f;
     /** Видимость граней для лампы в этом кадре (pos+грань → 1 видна, 2 нет). */
     private static final Long2ByteOpenHashMap SEEN = new Long2ByteOpenHashMap();
 
+    /** С сервера: {@code remove == null} — весь чанк заново; добавленные — с цветом, стёртые — только место. */
     public static void apply(long chunk, int[] add, int[] remove) {
-        IntOpenHashSet set;
-        if (remove == null) {
-            set = new IntOpenHashSet(add);
-            if (set.isEmpty()) CHUNKS.remove(chunk);
-            else CHUNKS.put(chunk, set);
-            return;
-        }
-        set = CHUNKS.computeIfAbsent(chunk, k -> new IntOpenHashSet());
-        for (int k : add) set.add(k);
-        for (int k : remove) set.remove(k);
+        Int2ByteOpenHashMap set = remove == null ? new Int2ByteOpenHashMap() : CHUNKS.computeIfAbsent(chunk, k -> new Int2ByteOpenHashMap());
+        for (int p : add) set.put(InkData.place(p), (byte) InkData.color(p));
+        if (remove != null) for (int k : remove) set.remove(InkData.place(k));
         if (set.isEmpty()) CHUNKS.remove(chunk);
+        else CHUNKS.put(chunk, set);
     }
 
     public static void onChunkUnload(ChunkEvent.Unload e) {
@@ -95,9 +93,10 @@ public final class InkClient {
             Vec3 lamp = new Vec3(s.x(), s.y(), s.z());
             for (int cx = cx0; cx <= cx1; cx++) {
                 for (int cz = cz0; cz <= cz1; cz++) {
-                    IntOpenHashSet dots = CHUNKS.get(ChunkPos.asLong(cx, cz));
+                    Int2ByteOpenHashMap dots = CHUNKS.get(ChunkPos.asLong(cx, cz));
                     if (dots == null) continue;
-                    for (int k : dots) {
+                    for (var en : dots.int2ByteEntrySet()) {
+                        int k = en.getIntKey();
                         BlockPos pos = InkData.pos(k, cx, cz);
                         Direction face = InkData.face(k);
                         int u = InkData.u(k), v = InkData.v(k);
@@ -130,7 +129,7 @@ public final class InkClient {
                             SEEN.put(faceKey, vis);
                         }
                         if (vis != 1) continue;
-                        quad(vc, m, pos, face, u, v, a);
+                        quad(vc, m, pos, face, u, v, a, GLOW[en.getByteValue() & 7], cam);
                     }
                 }
             }
@@ -150,9 +149,11 @@ public final class InkClient {
         };
     }
 
-    private static void quad(VertexConsumer vc, Matrix4f m, BlockPos pos, Direction face, int u, int v, float a) {
+    private static void quad(VertexConsumer vc, Matrix4f m, BlockPos pos, Direction face, int u, int v, float a, float[] col, Vec3 cam) {
         float a0 = u / 16.0f, a1 = (u + 1) / 16.0f, b0 = v / 16.0f, b1 = (v + 1) / 16.0f;
-        float eps = 0.0025f;
+        // отступ от грани растёт с расстоянием — иначе мерцает с гранью (точность глубины)
+        double dist = Math.sqrt(cam.distanceToSqr(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5));
+        float eps = (float) (0.006 + dist * 0.0012);
         float x = pos.getX(), y = pos.getY(), z = pos.getZ();
         boolean pos_ = face.getAxisDirection() == Direction.AxisDirection.POSITIVE;
         float off = pos_ ? 1.0f + eps : -eps;
@@ -178,7 +179,7 @@ public final class InkClient {
             }
         }
         // обе стороны — без забот о порядке обхода
-        for (int i = 0; i < 4; i++) vc.vertex(m, p[i][0], p[i][1], p[i][2]).color(R, G, B, a).endVertex();
-        for (int i = 3; i >= 0; i--) vc.vertex(m, p[i][0], p[i][1], p[i][2]).color(R, G, B, a).endVertex();
+        for (int i = 0; i < 4; i++) vc.vertex(m, p[i][0], p[i][1], p[i][2]).color(col[0], col[1], col[2], a).endVertex();
+        for (int i = 3; i >= 0; i--) vc.vertex(m, p[i][0], p[i][1], p[i][2]).color(col[0], col[1], col[2], a).endVertex();
     }
 }

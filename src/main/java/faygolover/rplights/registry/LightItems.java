@@ -5,7 +5,7 @@ import faygolover.rplights.block.ChargerBlock;
 import faygolover.rplights.block.ChargerBlockEntity;
 import faygolover.rplights.block.LampBlock;
 import faygolover.rplights.block.LampBlockEntity;
-import faygolover.rplights.item.UvMarkerItem;
+import faygolover.rplights.item.InkToolItem;
 import net.minecraft.world.level.material.PushReaction;
 import faygolover.rplights.item.AccumulatorItem;
 import faygolover.rplights.item.DynamoItem;
@@ -58,8 +58,21 @@ public final class LightItems {
     @SuppressWarnings("DataFlowIssue")
     public static final RegistryObject<BlockEntityType<LampBlockEntity>> LAMP_BE = BLOCK_ENTITIES.register("hurricane_lamp",
             () -> BlockEntityType.Builder.of(LampBlockEntity::new, LAMP_BLOCK.get()).build(null));
-    public static final RegistryObject<Item> UV_MARKER = ITEMS.register("uv_marker",
-            () -> new UvMarkerItem(new Item.Properties().stacksTo(1).durability(UvMarkerItem.INK)));
+    /** Маркеры невидимых чернил: синий — {@code uv_marker}, остальные — {@code uv_marker_<цвет>}. */
+    public static final java.util.List<RegistryObject<Item>> MARKERS = markers();
+    public static final RegistryObject<Item> UV_MARKER = MARKERS.get(0);
+    public static final RegistryObject<Item> INK_SPONGE = ITEMS.register("ink_sponge",
+            () -> new InkToolItem(new Item.Properties().stacksTo(1), -1));
+
+    private static java.util.List<RegistryObject<Item>> markers() {
+        java.util.List<RegistryObject<Item>> out = new java.util.ArrayList<>();
+        for (int i = 0; i < InkToolItem.COLOR_IDS.length; i++) {
+            int color = i;
+            String id = i == 0 ? "uv_marker" : "uv_marker_" + InkToolItem.COLOR_IDS[i];
+            out.add(ITEMS.register(id, () -> new InkToolItem(new Item.Properties().stacksTo(1).durability(InkToolItem.INK), color)));
+        }
+        return java.util.List.copyOf(out);
+    }
 
     public static final RegistryObject<Item> ACCUMULATOR = ITEMS.register("accumulator", () -> new AccumulatorItem(new Item.Properties().stacksTo(16)));
     public static final RegistryObject<Item> BULB = ITEMS.register("bulb", () -> new Item(new Item.Properties().stacksTo(16)));

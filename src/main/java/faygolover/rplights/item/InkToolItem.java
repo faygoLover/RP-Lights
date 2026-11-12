@@ -29,17 +29,30 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * Маркер с невидимыми чернилами: держишь ПКМ и ведёшь по блоку — рисуешь точками 1/16 блока. Глазом не видно, светится
- * только в луче УФ-фонаря (рисовать удобно с УФ-фонарём во второй руке). Shift — стирать. Чернил на {@link #INK} точек.
+ * Невидимые чернила: держишь ПКМ и ведёшь по блоку. Маркер ({@code color} 0..7) рисует точками 1/16 блока своим цветом
+ * (поверх другого цвета — перекрашивает), чернил на {@link #INK} точек; губка ({@code color} < 0) стирает полосой
+ * 5×5 клеток. Глазом не видно — светится только в луче УФ-фонаря (рисовать удобно с ним во второй руке).
  */
-public class UvMarkerItem extends Item {
+public class InkToolItem extends Item {
     public static final int INK = 800;
+    public static final String[] COLOR_IDS = {"blue", "green", "yellow", "orange", "pink", "violet", "red", "white"};
     private static final double REACH = 4.5;
-    /** Последняя точка, чтобы вести линию без разрывов: игрок → [pos, грань, u, v]. */
+    /** Последняя клетка, чтобы вести линию без разрывов: игрок → [pos, грань, u, v]. */
     private static final Map<UUID, long[]> LAST = new HashMap<>();
 
-    public UvMarkerItem(Properties props) {
+    private final int color;
+
+    public InkToolItem(Properties props, int color) {
         super(props);
+        this.color = color;
+    }
+
+    public boolean sponge() {
+        return color < 0;
+    }
+
+    public int color() {
+        return color;
     }
 
     @Override
@@ -80,15 +93,17 @@ public class UvMarkerItem extends Item {
             cells.add(uv);
         }
         LAST.put(p.getUUID(), new long[]{pos.asLong(), face.get3DDataValue(), uv[0], uv[1]});
-        if (p.isShiftKeyDown()) {
-            for (int[] c : cells) data.erase(sl, pos, face, c[0], c[1], 1);
-            if (remaining % 8 == 0) level.playSound(null, pos, SoundEvents.WOOL_STEP, SoundSource.PLAYERS, 0.15f, 1.6f);
+        if (sponge()) {
+            int wiped = 0;
+            for (int[] c : cells) wiped += data.erase(sl, pos, face, c[0], c[1], 2);
+            if (remaining % 7 == 0) level.playSound(null, pos, SoundEvents.WOOL_STEP, SoundSource.PLAYERS, 0.2f, 1.5f);
+            if (wiped > 0 && remaining % 5 == 0) level.playSound(null, pos, SoundEvents.SLIME_SQUISH_SMALL, SoundSource.PLAYERS, 0.1f, 1.8f);
             return;
         }
         int left = stack.getMaxDamage() - stack.getDamageValue();
         if (left <= 0) return;
         if (cells.size() > left) cells = cells.subList(0, left);
-        int added = data.add(sl, pos, face, cells.toArray(new int[0][]));
+        int added = data.add(sl, pos, face, cells.toArray(new int[0][]), color);
         if (added > 0 && !p.getAbilities().instabuild) {
             stack.hurtAndBreak(added, p, x -> x.broadcastBreakEvent(p.getUsedItemHand()));
         }
@@ -123,7 +138,8 @@ public class UvMarkerItem extends Item {
 
     @Override
     public void appendHoverText(ItemStack s, @Nullable Level level, List<Component> tip, TooltipFlag flag) {
-        tip.add(Component.translatable("item.rplights.uv_marker.desc").withStyle(ChatFormatting.GRAY));
-        tip.add(Component.translatable("rplights.tip.use.uv_marker").withStyle(ChatFormatting.DARK_GRAY));
+        String id = sponge() ? "ink_sponge" : "uv_marker";
+        tip.add(Component.translatable("item.rplights." + id + ".desc").withStyle(ChatFormatting.GRAY));
+        tip.add(Component.translatable("rplights.tip.use." + id).withStyle(ChatFormatting.DARK_GRAY));
     }
 }

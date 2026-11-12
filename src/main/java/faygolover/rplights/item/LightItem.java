@@ -47,7 +47,7 @@ public class LightItem extends Item {
     public void inventoryTick(ItemStack s, Level level, Entity e, int slot, boolean selected) {
         if (level.isClientSide || !(e instanceof Player p)) return;
         if (Lights.needsInit(s)) Lights.init(s, p.getRandom(), p.isCreative());
-        if (Lights.isOn(s) && !selected && p.getOffhandItem() != s) {
+        if (Lights.isOn(s) && !selected && Lights.inBackpack(p, s, slot)) {
             Lights.setOn(s, false);
             LightActions.click(p, false);
         }

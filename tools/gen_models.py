@@ -814,15 +814,38 @@ def tester():
     return m
 
 
-def ink_marker():
-    m = Model('uv_marker')
+MARKER_CAPS = {'blue': '#3F6FD8', 'green': '#3FAF4A', 'yellow': '#E6C62E', 'orange': '#E8822A',
+               'pink': '#E85A9E', 'violet': '#7A4BC8', 'red': '#D23A32', 'white': '#E9E9EE'}
+
+
+def ink_marker(colour):
+    """Маркер: светлый корпус, колпачок и полоса цвета чернил."""
+    m = Model('uv_marker_' + colour)
+    cap_hex = MARKER_CAPS[colour]
     body = paint('#D8D8D2', noise=0.03, edge=-0.08, k=0.3)
-    cap = paint('#6B46B8', noise=0.04, edge=-0.08, k=0.3)
-    m.cyl('z', 8.0, 8.0, 1.0, 3.5, 13.0, label('#D8D8D2', '#6B46B8', 0, 0, axis='z'), cap=body)
+    cap = paint(cap_hex, noise=0.04, edge=-0.08, k=0.3)
+    m.cyl('z', 8.0, 8.0, 1.0, 3.5, 13.0, body, cap=body)
     m.cyl('z', 8.0, 8.0, 1.5, 13.0, 15.0, cap, cap=cap)
     m.box((8.0, 9.0, 12.0), (8.5, 9.5, 14.5), cap)                                   # клипса
-    m.cyl('z', 8.0, 8.0, 0.5, 2.0, 3.5, paint('#3E2A6E', noise=0.08), cap=paint('#3E2A6E', noise=0.08))
-    m.box((7.5, 7.0, 6.0), (8.5, 7.5, 11.0), paint('#6B46B8', noise=0.03))           # полоса
+    m.cyl('z', 8.0, 8.0, 0.5, 2.0, 3.5, paint('#3B3B40', noise=0.08), cap=paint('#3B3B40', noise=0.08))
+    m.box((7.5, 7.0, 6.0), (8.5, 7.5, 11.0), paint(cap_hex, noise=0.03))             # полоса
+    m.box((7.5, 8.5, 5.0), (8.5, 9.0, 6.0), paint('#6B46B8', noise=0.03))            # метка «УФ»
+    return m
+
+
+def sponge():
+    """Губка: жёлтый поролон с порами и зелёный жёсткий слой."""
+    m = Model('ink_sponge')
+    foam_base = paint('#E9C94A', noise=0.1, edge=-0.08, k=0.0)
+
+    def foam(tx):
+        c = foam_base(tx)
+        if tx.noise(11) < 0.18:
+            c = mul(c, 0.72)
+        return c
+    m.box((4.0, 0.0, 5.0), (12.0, 1.0, 11.0), paint('#3C7A3A', noise=0.12, edge=-0.06, k=0.0))
+    m.box((4.0, 1.0, 5.0), (12.0, 4.0, 11.0), foam)
+    m.box((4.5, 4.0, 5.5), (11.5, 4.5, 10.5), foam)
     return m
 
 
@@ -915,8 +938,12 @@ def main():
     t = tester()
     jdump(os.path.join(MOD_ITEM, 'battery_tester.json'),
           build(t, 'battery_tester', display=thing(t, gui_rotation=(30, 200, 0), gui_fill=15.0)))
-    mk = ink_marker()
-    jdump(os.path.join(MOD_ITEM, 'uv_marker.json'), build(mk, 'uv_marker', display=held(mk, grip=(8.0, 8.0, 10.0))))
+    for colour in MARKER_CAPS:
+        mk = ink_marker(colour)
+        nm = 'uv_marker' if colour == 'blue' else 'uv_marker_' + colour
+        jdump(os.path.join(MOD_ITEM, nm + '.json'), build(mk, nm, display=held(mk, grip=(8.0, 8.0, 10.0))))
+    sp = sponge()
+    jdump(os.path.join(MOD_ITEM, 'ink_sponge.json'), build(sp, 'ink_sponge', display=thing(sp, gui_fill=13.0)))
 
     # зарядка
     for n in range(5):

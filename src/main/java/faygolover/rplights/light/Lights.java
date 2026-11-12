@@ -177,6 +177,15 @@ public final class Lights {
         return !isOn(s);
     }
 
+    /**
+     * Фонарь лежит в инвентаре (не в руке): тогда выключается. Curios зовёт {@code inventoryTick} и у надетого —
+     * поэтому проверяем, что это именно этот предмет в ячейке инвентаря, а не во второй руке и не в слоте Curios.
+     */
+    public static boolean inBackpack(net.minecraft.world.entity.player.Player p, ItemStack s, int slot) {
+        var items = p.getInventory().items;
+        return slot >= 0 && slot < items.size() && items.get(slot) == s && p.getOffhandItem() != s;
+    }
+
     /** Тик, до которого горит динамо (0 — не жали). */
     public static long dynamoUntil(ItemStack s) {
         CompoundTag t = s.getTag();
