@@ -3,6 +3,11 @@ package faygolover.rplights.gametest;
 import faygolover.rplights.RpLights;
 import faygolover.rplights.block.ChargerBlock;
 import faygolover.rplights.block.ChargerBlockEntity;
+import faygolover.rplights.block.LampBlock;
+import faygolover.rplights.block.LampBlockEntity;
+import faygolover.rplights.ink.InkData;
+import net.minecraft.core.Direction;
+import net.minecraft.world.level.block.Blocks;
 import faygolover.rplights.light.Cells;
 import faygolover.rplights.light.Glow;
 import faygolover.rplights.light.LightType;
@@ -125,5 +130,53 @@ public final class LightsGameTests {
             check(h, h.getBlockState(pos).getValue(ChargerBlock.CELLS) == 1, "блок показывает аккумулятор");
             h.succeed();
         });
+    }
+
+    @GameTest(template = T, timeoutTicks = 60)
+    public static void lampPlacedBurnsAndDrops(GameTestHelper h) {
+        BlockPos pos = new BlockPos(2, 2, 1);
+        h.setBlock(pos.below(), Blocks.STONE.defaultBlockState());
+        h.setBlock(pos, LightItems.LAMP_BLOCK.get().defaultBlockState());
+        LampBlockEntity be = (LampBlockEntity) h.getBlockEntity(pos);
+        ItemStack lamp = new ItemStack(LightItems.LAMP.get());
+        lamp.getOrCreateTag().putBoolean(Lights.INIT, true);
+        lamp.getOrCreateTag().putFloat(Lights.FUEL, 500.0f);
+        Lights.refresh(lamp);
+        Lights.setOn(lamp, true);
+        check(h, be != null, "блок-сущность лампы");
+        be.put(lamp);
+        check(h, h.getBlockState(pos).getValue(LampBlock.LIT), "поставленная горит");
+        check(h, LampBlock.light(h.getBlockState(pos)) == 13, "свет 13");
+        ItemStack probe = lamp.copy();
+        check(h, Lights.burnLamp(probe, Lights.hours(probe, LightType.LAMP) * 3600.0), "весь керосин сгорел — погасла");
+        check(h, probe.getTag().getFloat(Lights.FUEL) == 0.0f && !Lights.isOn(probe), "бак пуст, не горит");
+        h.runAfterDelay(2, () -> {
+            h.destroyBlock(pos);
+            h.runAfterDelay(2, () -> {
+                h.assertItemEntityPresent(LightItems.LAMP.get(), pos, 2.0);
+                h.succeed();
+            });
+        });
+    }
+
+    @GameTest(template = T)
+    public static void inkKeysAndEdits(GameTestHelper h) {
+        BlockPos p = new BlockPos(-37, -61, 1000);
+        int k = InkData.key(p, Direction.EAST, 13, 2);
+        check(h, InkData.pos(k, p.getX() >> 4, p.getZ() >> 4).equals(p), "точка: блок туда-обратно");
+        check(h, InkData.face(k) == Direction.EAST && InkData.u(k) == 13 && InkData.v(k) == 2, "точка: грань и клетка");
+        check(h, k >= 0, "ключ без знака");
+        int[] c = InkData.cell(Direction.UP, 0.99, 1.0, 0.01);
+        check(h, c[0] == 15 && c[1] == 0, "клетка по попаданию");
+        BlockPos at = h.absolutePos(new BlockPos(1, 2, 2));
+        InkData d = new InkData();
+        int added = d.add(h.getLevel(), at, Direction.NORTH, new int[][]{{1, 1}, {2, 1}, {1, 1}});
+        check(h, added == 2, "две новые точки");
+        long ch = net.minecraft.world.level.ChunkPos.asLong(at.getX() >> 4, at.getZ() >> 4);
+        d.erase(h.getLevel(), at, Direction.NORTH, 1, 1, 0);
+        check(h, d.chunk(ch) != null && d.chunk(ch).length == 1, "стёрта одна");
+        d.clearBlock(h.getLevel(), at);
+        check(h, d.chunk(ch) == null, "блок сломан — чернил нет");
+        h.succeed();
     }
 }

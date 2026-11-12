@@ -1,0 +1,64 @@
+{
+ "variants": {
+  "facing=north,hanging=false,lit=false": {
+   "model": "rplights:block/hurricane_lamp"
+  },
+  "facing=north,hanging=false,lit=true": {
+   "model": "rplights:block/hurricane_lamp_on"
+  },
+  "facing=north,hanging=true,lit=false": {
+   "model": "rplights:block/hurricane_lamp_hanging"
+  },
+  "facing=north,hanging=true,lit=true": {
+   "model": "rplights:block/hurricane_lamp_hanging_on"
+  },
+  "facing=east,hanging=false,lit=false": {
+   "model": "rplights:block/hurricane_lamp",
+   "y": 90
+  },
+  "facing=east,hanging=false,lit=true": {
+   "model": "rplights:block/hurricane_lamp_on",
+   "y": 90
+  },
+  "facing=east,hanging=true,lit=false": {
+   "model": "rplights:block/hurricane_lamp_hanging",
+   "y": 90
+  },
+  "facing=east,hanging=true,lit=true": {
+   "model": "rplights:block/hurricane_lamp_hanging_on",
+   "y": 90
+  },
+  "facing=south,hanging=false,lit=false": {
+   "model": "rplights:block/hurricane_lamp",
+   "y": 180
+  },
+  "facing=south,hanging=false,lit=true": {
+   "model": "rplights:block/hurricane_lamp_on",
+   "y": 180
+  },
+  "facing=south,hanging=true,lit=false": {
+   "model": "rplights:block/hurricane_lamp_hanging",
+   "y": 180
+  },
+  "facing=south,hanging=true,lit=true": {
+   "model": "rplights:block/hurricane_lamp_hanging_on",
+   "y": 180
+  },
+  "facing=west,hanging=false,lit=false": {
+   "model": "rplights:block/hurricane_lamp",
+   "y": 270
+  },
+  "facing=west,hanging=false,lit=true": {
+   "model": "rplights:block/hurricane_lamp_on",
+   "y": 270
+  },
+  "facing=west,hanging=true,lit=false": {
+   "model": "rplights:block/hurricane_lamp_hanging",
+   "y": 270
+  },
+  "facing=west,hanging=true,lit=true": {
+   "model": "rplights:block/hurricane_lamp_hanging_on",
+   "y": 270
+  }
+ }
+}

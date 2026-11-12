@@ -164,6 +164,19 @@ public final class Lights {
         return t != null && t.getByte(WICK) == 1;
     }
 
+    /**
+     * Горение лампы {@code rpSeconds} RP-секунд: керосин убывает (прикрученный фитиль — вдвое медленнее), кончился —
+     * гаснет. Общее для лампы в руке, на поясе и поставленной. Возвращает true, если погасла сейчас.
+     */
+    public static boolean burnLamp(ItemStack s, double rpSeconds) {
+        if (!isOn(s)) return false;
+        CompoundTag tag = s.getOrCreateTag();
+        float burn = (float) (rpSeconds / (hours(s, LightType.LAMP) * 3600.0) * FUEL_MAX);
+        tag.putFloat(FUEL, Math.max(0.0f, tag.getFloat(FUEL) - burn));
+        refresh(s);
+        return !isOn(s);
+    }
+
     /** Тик, до которого горит динамо (0 — не жали). */
     public static long dynamoUntil(ItemStack s) {
         CompoundTag t = s.getTag();

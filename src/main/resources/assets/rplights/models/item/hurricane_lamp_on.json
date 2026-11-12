@@ -1,6 +1,142 @@
 {
-  "parent": "item/generated",
-  "textures": {
-    "layer0": "rplights:item/hurricane_lamp_on"
+ "parent": "rplights:block/hurricane_lamp_on",
+ "gui_light": "side",
+ "display": {
+  "thirdperson_righthand": {
+   "rotation": [
+    90,
+    0,
+    0
+   ],
+   "translation": [
+    0,
+    0,
+    -1.6
+   ],
+   "scale": [
+    0.8,
+    0.8,
+    0.8
+   ]
+  },
+  "thirdperson_lefthand": {
+   "rotation": [
+    90,
+    0,
+    0
+   ],
+   "translation": [
+    0,
+    0,
+    -1.6
+   ],
+   "scale": [
+    0.8,
+    0.8,
+    0.8
+   ]
+  },
+  "firstperson_righthand": {
+   "rotation": [
+    0,
+    0,
+    0
+   ],
+   "translation": [
+    0,
+    2.238,
+    0
+   ],
+   "scale": [
+    0.85,
+    0.85,
+    0.85
+   ]
+  },
+  "firstperson_lefthand": {
+   "rotation": [
+    0,
+    0,
+    0
+   ],
+   "translation": [
+    0,
+    2.238,
+    0
+   ],
+   "scale": [
+    0.85,
+    0.85,
+    0.85
+   ]
+  },
+  "gui": {
+   "rotation": [
+    20,
+    225,
+    0
+   ],
+   "translation": [
+    0,
+    2.271,
+    0.826
+   ],
+   "scale": [
+    1.074,
+    1.074,
+    1.074
+   ]
+  },
+  "ground": {
+   "rotation": [
+    0,
+    0,
+    0
+   ],
+   "translation": [
+    0,
+    5,
+    0
+   ],
+   "scale": [
+    0.6,
+    0.6,
+    0.6
+   ]
+  },
+  "fixed": {
+   "rotation": [
+    20,
+    405,
+    0
+   ],
+   "translation": [
+    0,
+    1.757,
+    0.639
+   ],
+   "scale": [
+    0.831,
+    0.831,
+    0.831
+   ]
+  },
+  "head": {
+   "rotation": [
+    0,
+    180,
+    0
+   ],
+   "translation": [
+    0,
+    1.958,
+    0
+   ],
+   "scale": [
+    0.87,
+    0.87,
+    0.87
+   ]
   }
+ }
 }

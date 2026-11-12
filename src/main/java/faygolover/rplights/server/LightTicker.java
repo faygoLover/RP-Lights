@@ -100,10 +100,7 @@ public final class LightTicker {
                     p.level().playSound(null, p.getX(), p.getY(), p.getZ(), SoundEvents.FIRE_EXTINGUISH, SoundSource.PLAYERS, 0.4f, 1.4f);
                     return;
                 }
-                float burn = (float) (rpSeconds / (Lights.hours(s, type) * 3600.0) * Lights.FUEL_MAX);
-                tag.putFloat(Lights.FUEL, Math.max(0.0f, tag.getFloat(Lights.FUEL) - burn));
-                Lights.refresh(s);
-                if (!Lights.isOn(s)) p.level().playSound(null, p.getX(), p.getY(), p.getZ(), SoundEvents.CANDLE_EXTINGUISH, SoundSource.PLAYERS, 0.5f, 0.8f);
+                if (Lights.burnLamp(s, rpSeconds)) p.level().playSound(null, p.getX(), p.getY(), p.getZ(), SoundEvents.CANDLE_EXTINGUISH, SoundSource.PLAYERS, 0.5f, 0.8f);
             }
             default -> cells(p, s, type, rpSeconds);
         }

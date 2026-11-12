@@ -31,8 +31,12 @@ T = {
                                              "Squeeze light: shines while you pump the lever. No batteries."),
     "item.rplights.hurricane_lamp": ("Лампа «Летучая мышь»", "Hurricane Lamp"),
     "item.rplights.hurricane_lamp.desc": (
-        "Керосиновая, светит вокруг. Носится в руке или на поясе (слот Curios «пояс»). В воде гаснет.",
-        "Kerosene, shines all round. Carry it in hand or on the belt (Curios belt slot). Goes out in water."),
+        "Керосиновая, светит вокруг. Носится в руке или на поясе (слот Curios «пояс»), ставится на пол и под потолок. В воде гаснет.",
+        "Kerosene, shines all round. Carry it in hand or on the belt (Curios belt slot), or set it on a floor or under a ceiling. Goes out in water."),
+    "block.rplights.hurricane_lamp": ("Лампа «Летучая мышь»", "Hurricane Lamp"),
+    "item.rplights.uv_marker": ("Маркер с невидимыми чернилами", "Invisible Ink Marker"),
+    "item.rplights.uv_marker.desc": ("Пишет невидимо — видно только в ультрафиолете.",
+                                     "Writes invisibly - shows only under ultraviolet light."),
     "item.rplights.accumulator": ("Аккумулятор", "Rechargeable Cell"),
     "item.rplights.accumulator.desc": (
         "Заряжается в зарядном устройстве. Держит меньше обычной батарейки и со временем изнашивается.",
@@ -63,8 +67,11 @@ T = {
         "ПКМ — жим рычага, каждый добавляет несколько секунд света. Тратит немного сил.",
         "Right-click: pump the lever, each adds a few seconds of light. Costs a little stamina."),
     "rplights.tip.use.hurricane_lamp": (
-        "ПКМ — зажечь/погасить. Shift+ПКМ: с ведром керосина во второй руке — заправить, с пустой — фитиль.",
-        "Right-click: light/put out. Sneak+right-click: kerosene bucket in the other hand - refuel, empty hand - wick."),
+        "ПКМ — зажечь/погасить, ПКМ по блоку — поставить. Shift+ПКМ: с ведром керосина во второй руке — заправить, с пустой — фитиль. Поставленная: ПКМ — зажечь/погасить, Shift+ПКМ пустой рукой — взять.",
+        "Right-click: light/put out, right-click a block: set it down. Sneak+right-click: kerosene bucket in the other hand - refuel, empty hand - wick. Set down: right-click to light/put out, sneak+right-click with an empty hand to pick up."),
+    "rplights.tip.use.uv_marker": (
+        "Держи ПКМ и веди по блоку — рисует. Shift — стирает. Видно в луче УФ-фонаря.",
+        "Hold right-click and move over a block to draw. Sneak to erase. Visible in a UV flashlight beam."),
     "rplights.tip.use.sa": (
         "Shift+ПКМ: с батарейкой во второй руке — поменять, с пустой — ближний/дальний свет.",
         "Sneak+right-click: battery in the other hand - swap, empty hand - low/high beam."),

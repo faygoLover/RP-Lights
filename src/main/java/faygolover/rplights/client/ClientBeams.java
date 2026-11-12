@@ -32,7 +32,7 @@ public final class ClientBeams {
     private static final float AIM_LAG = 0.055f;
 
     /** Луч и где лампа: у своего фонаря от первого лица экранный проход не прячет его за стенами. */
-    public record Lamp(LightBeams.Spec spec, boolean firstPersonOwn) {}
+    public record Lamp(LightBeams.Spec spec, boolean firstPersonOwn, LightType type) {}
 
     private enum Mount { MAIN, OFF, HEAD, CHEST, BELT }
 
@@ -139,7 +139,7 @@ public final class ClientBeams {
                 LightBeams.cos(type.coreIn), LightBeams.cos(coreOut), LightBeams.cos(type.spillIn), LightBeams.cos(spillOut),
                 LightBeams.cos(type.washIn), LightBeams.cos(washOut), type.spillWeight, type.washWeight,
                 g.r(), g.g(), g.b(), p.getId(), local);
-        LAMPS.add(new Lamp(spec, fp && (mount == Mount.MAIN || mount == Mount.OFF || mount == Mount.HEAD)));
+        LAMPS.add(new Lamp(spec, fp && (mount == Mount.MAIN || mount == Mount.OFF || mount == Mount.HEAD), type));
     }
 
     private static Vec3 horizontalRight(Vec3 aim) {

@@ -20,6 +20,7 @@ LIGHTS = {
     'rplights:hurricane_lamp': 0.7,
     'rplights:uv_flashlight': 0.35,
     'rplights:rgb_flashlight': 0.12,
+    'rplights:uv_marker': 0.3,
 }
 # предмет: (доля шанса батарейки SA, сколько штук)
 SUPPLIES = {

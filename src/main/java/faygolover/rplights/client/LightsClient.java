@@ -1,6 +1,8 @@
 package faygolover.rplights.client;
 
 import com.mojang.blaze3d.platform.InputConstants;
+import faygolover.flrender.light.ColorTable;
+import faygolover.flrender.render.LatePass;
 import faygolover.rplights.RpLights;
 import faygolover.rplights.light.Glow;
 import faygolover.rplights.light.LightType;
@@ -17,6 +19,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
+import net.minecraftforge.client.event.RegisterGuiOverlaysEvent;
 import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
 import net.minecraftforge.client.settings.KeyConflictContext;
 import net.minecraftforge.common.MinecraftForge;
@@ -26,10 +29,14 @@ import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.registries.RegistryObject;
 import org.lwjgl.glfw.GLFW;
+import top.theillusivec4.curios.api.client.CuriosRendererRegistry;
 
 import java.util.Set;
 
-/** Клиент: модель «горит», клавиша надетого фонаря, лучи для FL Render, экранный проход, подсказка фонаря SA. */
+/**
+ * Клиент: модель «горит», клавиша надетого фонаря, лучи для FL Render, экранный проход, подсказка фонаря SA, надетое
+ * на игроке ({@link WornRenderer}), ослепление ({@link Glare}), невидимые чернила в УФ ({@link InkClient}).
+ */
 public final class LightsClient {
     private LightsClient() {}
 
@@ -42,7 +49,14 @@ public final class LightsClient {
     public static void init(IEventBus bus) {
         bus.addListener(LightsClient::setup);
         bus.addListener(LightsClient::keys);
+        bus.addListener(WornRenderer::registerModels);
+        bus.addListener((RegisterGuiOverlaysEvent e) -> e.registerAboveAll("glare", Glare::render));
         MinecraftForge.EVENT_BUS.addListener(ScreenFlash::onRenderLevelStage);
+        MinecraftForge.EVENT_BUS.addListener(InkClient::onRenderLevelStage);
+        LatePass.register(InkClient::onRenderLevelStage);
+        MinecraftForge.EVENT_BUS.addListener(InkClient::onChunkUnload);
+        MinecraftForge.EVENT_BUS.addListener(InkClient::onLevelUnload);
+        MinecraftForge.EVENT_BUS.addListener((ClientPlayerNetworkEvent.LoggingOut e) -> InkClient.clear());
         MinecraftForge.EVENT_BUS.addListener(LightsClient::tick);
         MinecraftForge.EVENT_BUS.addListener(LightsClient::tooltip);
         MinecraftForge.EVENT_BUS.addListener((ClientPlayerNetworkEvent.LoggingOut e) -> ScreenFlash.dispose());
@@ -62,6 +76,9 @@ public final class LightsClient {
                 });
             }
             ClientBeams.register();
+            CuriosRendererRegistry.register(LightItems.HEADLAMP.get(), WornRenderer::new);
+            CuriosRendererRegistry.register(LightItems.LAMP.get(), WornRenderer::new);
+            ColorTable.block(LightItems.LAMP_BLOCK.get(), 0xFFB25A, 0, false);
         });
     }
 

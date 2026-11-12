@@ -96,7 +96,7 @@ public final class ScreenFlash {
                             s.owner(), s.local());
                 }
             }
-            out.add(new ClientBeams.Lamp(s, false));
+            out.add(new ClientBeams.Lamp(s, false, l.type()));
         }
         return out;
     }

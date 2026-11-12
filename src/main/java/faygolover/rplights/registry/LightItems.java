@@ -3,6 +3,10 @@ package faygolover.rplights.registry;
 import faygolover.rplights.RpLights;
 import faygolover.rplights.block.ChargerBlock;
 import faygolover.rplights.block.ChargerBlockEntity;
+import faygolover.rplights.block.LampBlock;
+import faygolover.rplights.block.LampBlockEntity;
+import faygolover.rplights.item.UvMarkerItem;
+import net.minecraft.world.level.material.PushReaction;
 import faygolover.rplights.item.AccumulatorItem;
 import faygolover.rplights.item.DynamoItem;
 import faygolover.rplights.item.LampItem;
@@ -47,7 +51,15 @@ public final class LightItems {
     public static final RegistryObject<Item> UV_FLASHLIGHT = ITEMS.register("uv_flashlight", () -> new LightItem(LightType.UV, one()));
     public static final RegistryObject<Item> RGB_FLASHLIGHT = ITEMS.register("rgb_flashlight", () -> new LightItem(LightType.RGB, one()));
     public static final RegistryObject<Item> DYNAMO = ITEMS.register("dynamo_flashlight", () -> new DynamoItem(one()));
-    public static final RegistryObject<Item> LAMP = ITEMS.register("hurricane_lamp", () -> new LampItem(one()));
+    public static final RegistryObject<Block> LAMP_BLOCK = BLOCKS.register("hurricane_lamp", () -> new LampBlock(BlockBehaviour.Properties.of()
+            .mapColor(MapColor.COLOR_GREEN).strength(0.5f).sound(SoundType.LANTERN).noOcclusion().pushReaction(PushReaction.DESTROY)
+            .lightLevel(LampBlock::light)));
+    public static final RegistryObject<Item> LAMP = ITEMS.register("hurricane_lamp", () -> new LampItem(LAMP_BLOCK.get(), one()));
+    @SuppressWarnings("DataFlowIssue")
+    public static final RegistryObject<BlockEntityType<LampBlockEntity>> LAMP_BE = BLOCK_ENTITIES.register("hurricane_lamp",
+            () -> BlockEntityType.Builder.of(LampBlockEntity::new, LAMP_BLOCK.get()).build(null));
+    public static final RegistryObject<Item> UV_MARKER = ITEMS.register("uv_marker",
+            () -> new UvMarkerItem(new Item.Properties().stacksTo(1).durability(UvMarkerItem.INK)));
 
     public static final RegistryObject<Item> ACCUMULATOR = ITEMS.register("accumulator", () -> new AccumulatorItem(new Item.Properties().stacksTo(16)));
     public static final RegistryObject<Item> BULB = ITEMS.register("bulb", () -> new Item(new Item.Properties().stacksTo(16)));

@@ -1,6 +1,7 @@
 {
   "replace": false,
   "values": [
-    "rplights:charger"
+    "rplights:charger",
+    "rplights:hurricane_lamp"
   ]
 }

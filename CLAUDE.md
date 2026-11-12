@@ -13,9 +13,13 @@
 - `block/Charger*` — зарядка. `compat/CuriosCompat` — слоты head/body/belt (`data/rplights/curios`).
 - Клиент: `ClientBeams` (лучи кадра → FL Render `LightBeams`), `ScreenFlash` (свой экранный проход,
   `shaders/program/flash.fsh`), `LightsClient` (модель «горит», клавиша L, подсказка SA).
+- 0.2.0: `block/LampBlock*` (поставленная лампа, NBT лампы в блок-сущности), `ink/` (невидимые чернила: `InkData`
+  по чанкам, `InkEvents`), `item/UvMarkerItem`; клиент — `WornRenderer` (надетое, Curios), `Glare` (ослепление),
+  `InkClient` (чернила в УФ-луче, на `LatePass`).
 - Миксины: `SaModeMixin` (ближний свет SA, цель строкой), `GuiGraphicsBarMixin` (нет полоски у SA), `PostChainAccessor`.
 
 ## Сборка
 `JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-17.0.14.7-hotspot" ./gradlew build -x test` → `build/libs`.
-GameTest: `./gradlew runGameTestServer`. Иконки и модели — `python tools/gen_assets.py`, переводы — `tools/gen_lang.py`.
+GameTest: `./gradlew runGameTestServer`. Модели и текстуры — `python tools/gen_models.py` (3D, сетка 0,5, 2 пикселя на
+единицу), превью без игры — `python tools/preview.py out.png имя[:вид] ...`, переводы — `tools/gen_lang.py`.
 Сборка S5: `tools/pack_loot.py`, `tools/pack_lights.py` (повторный запуск не дублирует).
