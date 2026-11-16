@@ -30,6 +30,9 @@ public final class RpLights {
         LightItems.register(bus);
         ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, LightsConfig.SPEC);
         bus.addListener(this::setup);
+        // Общий вопрос «несёт включённый свет» (RP Psyche — полная тьма, Zone Artifacts — паутина) — через RP Core.
+        faygolover.rpcore.api.RpCoreAPI.registerLight(new net.minecraft.resources.ResourceLocation(MODID, "lights"),
+                faygolover.rplights.light.Lights::carried);
         DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> LightsClient.init(bus));
     }
 

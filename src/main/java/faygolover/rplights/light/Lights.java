@@ -52,6 +52,21 @@ public final class Lights {
         return SA_ID.equals(ForgeRegistries.ITEMS.getKey(s.getItem()));
     }
 
+    /**
+     * Несёт ли сущность включённый фонарь RP Lights: в руке или в слотах Curios (голова, тело, пояс). Это ответ мода
+     * на общий вопрос RP Core «несёт свет» ({@code RpCoreAPI.carriesLight}); работает на обеих сторонах.
+     */
+    public static boolean carried(net.minecraft.world.entity.LivingEntity e) {
+        return lit(e.getMainHandItem()) || lit(e.getOffhandItem())
+                || lit(faygolover.rpcore.api.Worn.first(e, faygolover.rplights.compat.CuriosCompat.HEAD))
+                || lit(faygolover.rpcore.api.Worn.first(e, faygolover.rplights.compat.CuriosCompat.BODY))
+                || lit(faygolover.rpcore.api.Worn.first(e, faygolover.rplights.compat.CuriosCompat.BELT));
+    }
+
+    private static boolean lit(ItemStack s) {
+        return !s.isEmpty() && type(s) != null && isOn(s);
+    }
+
     public static boolean isOn(ItemStack s) {
         CompoundTag t = s.getTag();
         if (t == null) return false;

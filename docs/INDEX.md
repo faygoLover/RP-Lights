@@ -1,23 +1,23 @@
 # RP Lights — указатель кода
 
-Создано `python _family/tools/mapgen.py`, версия мода 0.2.3-1.20.1-forge.
+Создано `python _family/tools/mapgen.py`, версия мода 0.2.4-1.20.1-forge.
 **Руками не править**: пересоздаётся скриптом. Смысл, потоки работы и рецепты — в `docs/MAP.md`.
 Разбор по шаблонам, без компиляции: необычно оформленная регистрация может отсутствовать в списках.
 
-Всего: 36 файлов, 3794 строк Java.
+Всего: 36 файлов, 3812 строк Java.
 
 ## 1. Пакеты
 
 | Пакет | Файлов | Строк |
 |---|---:|---:|
-| `faygolover.rplights` | 2 | 116 |
+| `faygolover.rplights` | 2 | 119 |
 | `faygolover.rplights.block` | 4 | 502 |
 | `faygolover.rplights.client` | 7 | 891 |
 | `faygolover.rplights.compat` | 1 | 12 |
 | `faygolover.rplights.gametest` | 1 | 187 |
 | `faygolover.rplights.ink` | 2 | 230 |
 | `faygolover.rplights.item` | 7 | 530 |
-| `faygolover.rplights.light` | 5 | 757 |
+| `faygolover.rplights.light` | 5 | 772 |
 | `faygolover.rplights.mixin` | 1 | 23 |
 | `faygolover.rplights.mixin.client` | 2 | 35 |
 | `faygolover.rplights.net` | 1 | 78 |
@@ -29,7 +29,7 @@
 
 ### `faygolover.rplights`
 - `LightsConfig`, 76 — Настройки сервера (serverconfig/rplights-server.toml).
-- `RpLights`, 40 — RP Lights — фонари и лампы семейства RP: ручной фонарь с лампой накаливания, старый хромированный, налобный / нагрудный, динамо, керосиновая «Летучая мышь», УФ и RGB; фонарь Survivor's Arsenal — «отличный», на тех же батарейках.
+- `RpLights`, 43 — RP Lights — фонари и лампы семейства RP: ручной фонарь с лампой накаливания, старый хромированный, налобный / нагрудный, динамо, керосиновая «Летучая мышь», УФ и RGB; фонарь Survivor's Arsenal — «отличный», на тех же батарейках.
 
 ### `faygolover.rplights.block`
 - `ChargerBlock`, 121 — Зарядное устройство на 4 аккумулятора.
@@ -70,7 +70,7 @@
 - `Glow` (record), 97 — Как светит фонарь в этот тик: сила (доля от полной) и цвет.
 - `LightActions`, 203 — Действия игрока с фонарём (сервер): включить, поменять батарейки, лампочку, керосин, режим.
 - `LightType` (enum), 89 — Виды света: питание, как садится, луч.
-- `Lights`, 195 — Состояние фонаря в NBT — общее для своих предметов и фонаря Survivor's Arsenal.
+- `Lights`, 210 — Состояние фонаря в NBT — общее для своих предметов и фонаря Survivor's Arsenal.
 
 ### `faygolover.rplights.mixin`
 - `SaModeMixin`, 23 — Survivor's Arsenal 1.0.0: у фонаря есть ближний свет (20 блоков, 0.62), но isHighMode всегда true.
@@ -136,12 +136,12 @@
 
 ## 8. Что берёт из RP Core и что ему даёт
 
-Методы `RpCoreAPI` (сколько вызовов): `bodyScale` 4, `stamina` 1.
+Методы `RpCoreAPI` (сколько вызовов): `bodyScale` 4, `carriesLight` 1, `registerLight` 1, `stamina` 1.
 
 ## 9. Связи с другими модами
 
 
-Пакеты других модов семейства в коде: `flrender` — 5 файлов; `rpcore` — 7 файлов.
+Пакеты других модов семейства в коде: `flrender` — 5 файлов; `rpcore` — 9 файлов.
 
 Миксины (3):
 - `SaModeMixin` (mixins) → targets = "com.ogaba.sa_survival.item.common.FlashlightItem", remap = false
