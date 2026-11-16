@@ -67,9 +67,9 @@ public final class ClientBeams {
             boolean fp = local && fpView;
             add(p, p.getMainHandItem(), Mount.MAIN, local, fp, partial, dt, gt, seen);
             add(p, p.getOffhandItem(), Mount.OFF, local, fp, partial, dt, gt, seen);
-            add(p, CuriosCompat.worn(p, CuriosCompat.HEAD), Mount.HEAD, local, fp, partial, dt, gt, seen);
-            add(p, CuriosCompat.worn(p, CuriosCompat.BODY), Mount.CHEST, local, fp, partial, dt, gt, seen);
-            add(p, CuriosCompat.worn(p, CuriosCompat.BELT), Mount.BELT, local, fp, partial, dt, gt, seen);
+            add(p, faygolover.rpcore.api.Worn.first(p, CuriosCompat.HEAD), Mount.HEAD, local, fp, partial, dt, gt, seen);
+            add(p, faygolover.rpcore.api.Worn.first(p, CuriosCompat.BODY), Mount.CHEST, local, fp, partial, dt, gt, seen);
+            add(p, faygolover.rpcore.api.Worn.first(p, CuriosCompat.BELT), Mount.BELT, local, fp, partial, dt, gt, seen);
         }
         AIM.keySet().retainAll(seen);
         return LAMPS;

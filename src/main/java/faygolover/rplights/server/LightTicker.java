@@ -48,9 +48,9 @@ public final class LightTicker {
             double rp = RpCoreAPI.bodyScale();
             light(p, p.getMainHandItem(), rp);
             light(p, p.getOffhandItem(), rp);
-            light(p, CuriosCompat.worn(p, CuriosCompat.HEAD), rp);
-            light(p, CuriosCompat.worn(p, CuriosCompat.BODY), rp);
-            light(p, CuriosCompat.worn(p, CuriosCompat.BELT), rp);
+            light(p, faygolover.rpcore.api.Worn.first(p, CuriosCompat.HEAD), rp);
+            light(p, faygolover.rpcore.api.Worn.first(p, CuriosCompat.BODY), rp);
+            light(p, faygolover.rpcore.api.Worn.first(p, CuriosCompat.BELT), rp);
         }
     }
 

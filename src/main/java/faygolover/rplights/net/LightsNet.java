@@ -63,7 +63,7 @@ public final class LightsNet {
                 ServerPlayer p = ctx.get().getSender();
                 if (p == null) return;
                 for (String slot : new String[]{CuriosCompat.HEAD, CuriosCompat.BODY, CuriosCompat.BELT}) {
-                    ItemStack s = CuriosCompat.worn(p, slot);
+                    ItemStack s = faygolover.rpcore.api.Worn.first(p, slot);
                     if (Lights.type(s) != null) {
                         LightActions.toggle(p, s);
                         return;

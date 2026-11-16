@@ -1,10 +1,10 @@
 # RP Lights — указатель кода
 
-Создано `python _family/tools/mapgen.py` 15.11.2026, версия 0.2.2-1.20.1-forge, коммит `ff9cc7f`.
+Создано `python _family/tools/mapgen.py`, версия мода 0.2.3-1.20.1-forge.
 **Руками не править**: пересоздаётся скриптом. Смысл, потоки работы и рецепты — в `docs/MAP.md`.
 Разбор по шаблонам, без компиляции: необычно оформленная регистрация может отсутствовать в списках.
 
-Всего: 36 файлов, 3822 строк Java.
+Всего: 36 файлов, 3794 строк Java.
 
 ## 1. Пакеты
 
@@ -13,7 +13,7 @@
 | `faygolover.rplights` | 2 | 116 |
 | `faygolover.rplights.block` | 4 | 502 |
 | `faygolover.rplights.client` | 7 | 891 |
-| `faygolover.rplights.compat` | 1 | 40 |
+| `faygolover.rplights.compat` | 1 | 12 |
 | `faygolover.rplights.gametest` | 1 | 187 |
 | `faygolover.rplights.ink` | 2 | 230 |
 | `faygolover.rplights.item` | 7 | 530 |
@@ -47,7 +47,7 @@
 - `WornRenderer`, 83 — Надетое на игроке (Curios): налобный — ремешок вокруг головы и лампа на лбу; на груди — лямки и лампа; «Летучая мышь» — висит на поясе справа спереди и чуть качается.
 
 ### `faygolover.rplights.compat`
-- `CuriosCompat`, 40 — Фонари в слотах Curios: голова (налобный), тело (нагрудный), пояс (лампа).
+- `CuriosCompat`, 12 — Имена слотов Curios, в которых носят фонари: голова (налобный), тело (нагрудный), пояс (лампа).
 
 ### `faygolover.rplights.gametest`
 - `LightsGameTests`, 187 — Логика без игрока: батарейки, сила питания, вид света, рецепт обслуживания, зарядка.
@@ -141,7 +141,7 @@
 ## 9. Связи с другими модами
 
 
-Пакеты других модов семейства в коде: `flrender` — 5 файлов; `rpcore` — 4 файлов.
+Пакеты других модов семейства в коде: `flrender` — 5 файлов; `rpcore` — 7 файлов.
 
 Миксины (3):
 - `SaModeMixin` (mixins) → targets = "com.ogaba.sa_survival.item.common.FlashlightItem", remap = false
