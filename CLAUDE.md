@@ -1,25 +1,31 @@
 # RP Lights
 
-Мод Minecraft Forge 1.20.1 (Java 17), `rplights`, пакет `faygolover.rplights`. Фонари и лампы семейства RP.
-**С автором общаемся по-русски.** План, решения, числа — `docs/00_plan.md`.
+Фонари и лампы для RP-сервера (`rplights`): батарейки, лампочки, керосин, ношение в слотах Curios, настоящий свет через FL Render, УФ-чернила. Семейство RP/FL/S5, Forge 1.20.1, Java 17. Отвечать по-русски.
 
-## Устройство
-- `light/LightType` — виды света (батарейки, время, луч, цвет). `light/Lights` — состояние в NBT (общее со SA:
-  `FlashlightOn`/`FlashlightBattery` пишутся из наших батареек). `light/Cells` — батарейки. `light/Glow` — как светит
-  в тик (мигания по тику, без пакетов). `light/LightActions` — действия игрока.
-- `server/LightTicker` — раз в секунду расход по `RpCoreAPI.bodyScale()` (RP-время), поломки; раз в 0,5 с — заряд
-  найденному (все слоты `containerMenu`), сушка старого. Shift+ПКМ фонарём SA, падение, возврат при крафте.
-- `recipe/LightRecipe` — обслуживание в верстаке (`rplights:light_service`).
-- `block/Charger*` — зарядка. `compat/CuriosCompat` — слоты head/body/belt (`data/rplights/curios`).
-- Клиент: `ClientBeams` (лучи кадра → FL Render `LightBeams`), `ScreenFlash` (свой экранный проход,
-  `shaders/program/flash.fsh`), `LightsClient` (модель «горит», клавиша L, подсказка SA).
-- 0.2.0: `block/LampBlock*` (поставленная лампа, NBT лампы в блок-сущности), `ink/` (невидимые чернила: `InkData`
-  по чанкам, `InkEvents`), `item/UvMarkerItem`; клиент — `WornRenderer` (надетое, Curios), `Glare` (ослепление),
-  `InkClient` (чернила в УФ-луче, на `LatePass`).
-- Миксины: `SaModeMixin` (ближний свет SA, цель строкой), `GuiGraphicsBarMixin` (нет полоски у SA), `PostChainAccessor`.
+## Прежде чем что-то добавлять
+1. `../_family/FAMILY_MAP.md`, раздел 3 «Куда это положить» — нет ли готового механизма в RP Core или другого мода для этой задачи.
+2. `docs/MAP.md`, раздел 4 — рецепт для твоего случая и образец, с которого списать.
+3. `docs/INDEX.md` — поиск по слову: нет ли уже такого класса, события, команды.
 
-## Сборка
-`JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-17.0.14.7-hotspot" ./gradlew build -x test` → `build/libs`.
-GameTest: `./gradlew runGameTestServer`. Модели и текстуры — `python tools/gen_models.py` (3D, сетка 0,5, 2 пикселя на
-единицу), превью без игры — `python tools/preview.py out.png имя[:вид] ...`, переводы — `tools/gen_lang.py`.
-Сборка S5: `tools/pack_loot.py`, `tools/pack_lights.py` (повторный запуск не дублирует).
+Новый класс, пакет, пакет сети, команда, ключ конфига или поле состояния — обнови `docs/MAP.md` в том же
+коммите и пересоздай указатель: `python ../_family/tools/mapgen.py "RP Lights"`.
+
+## Нельзя
+- Менять ключи NBT фонаря (`light/Lights`, `light/Cells`), id предметов и блоков, имя `rplights_ink`, ключи `rplights-server.toml`.
+- Править руками JSON моделей: их создаёт скрипт.
+- Прямые импорты и отражение в другие моды семейства — только через RP Core (исключения: `../_family/links_allow.txt`).
+- Push, выпуск сборки, правки живого сервера — только по прямому слову Алекса. Коммиты локальные.
+
+## Команды
+```
+gradlew.bat build                                        # jar в build/libs
+python ../_family/family.py verify --tests "RP Lights"   # компиляция, связи, игровые тесты (8)
+```
+JDK 17: `JAVA_HOME="C:/Program Files/Eclipse Adoptium/jdk-17.0.14.7-hotspot"`. Игровые тесты — один прогон в конце задачи.
+
+## Где что
+- `docs/MAP.md` — устройство, потоки работы, рецепты, данные, ловушки.
+- `docs/INDEX.md` — указатель кода (создаёт скрипт, руками не править).
+- `docs/00_plan.md` — план
+- `docs/CLAUDE_old.md` — сборка и модели.
+- Общие правила работы: `../_handover/06_how_to_work.md`.
