@@ -1,6 +1,6 @@
 # RP Lights — карта
 
-Версия на момент написания: 0.2.4 (16.11.2026). Факты по классам и миксинам — `docs/INDEX.md`.
+Версия на момент написания: 0.2.5 (19.11.2026). Факты по классам и миксинам — `docs/INDEX.md`.
 
 ## 1. Что делает и чего не делает
 
@@ -43,7 +43,7 @@ Curios «голова», «тело», «пояс» (`Worn.first`) → `light(�
 |---|---|---|
 | `rplights` | вход, конфиг | `RpLights`, `LightsConfig` |
 | `light` | состояние фонаря, батарейки, виды света, действия | `Lights`, `LightType`, `Cells`, `Glow`, `LightActions` |
-| `item` | предметы | `LightItem` (на батарейках), `LampItem`, `DynamoItem`, `AccumulatorItem`, `TesterItem`, `InkToolItem` |
+| `item` | предметы | `LightItem` (на батарейках), `LampItem`, `DynamoItem`, `AccumulatorItem`, `TesterItem`, `InkToolItem`, `HolderItem` (пенал маркеров на 5, кольцо ХИС Glow Sticks на 30; NBT `Held`, как bundle) |
 | `block` | поставленная лампа, зарядное устройство | `LampBlock`, `ChargerBlock` и их блок-сущности |
 | `server` | тик сервера | `LightTicker` |
 | `ink` | чернила на блоках | `InkData`, `InkEvents` |

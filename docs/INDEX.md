@@ -1,10 +1,10 @@
 # RP Lights — указатель кода
 
-Создано `python _family/tools/mapgen.py`, версия мода 0.2.4-1.20.1-forge.
+Создано `python _family/tools/mapgen.py`, версия мода 0.2.5-1.20.1-forge.
 **Руками не править**: пересоздаётся скриптом. Смысл, потоки работы и рецепты — в `docs/MAP.md`.
 Разбор по шаблонам, без компиляции: необычно оформленная регистрация может отсутствовать в списках.
 
-Всего: 36 файлов, 3812 строк Java.
+Всего: 37 файлов, 4032 строк Java.
 
 ## 1. Пакеты
 
@@ -16,13 +16,13 @@
 | `faygolover.rplights.compat` | 1 | 12 |
 | `faygolover.rplights.gametest` | 1 | 187 |
 | `faygolover.rplights.ink` | 2 | 230 |
-| `faygolover.rplights.item` | 7 | 530 |
+| `faygolover.rplights.item` | 8 | 738 |
 | `faygolover.rplights.light` | 5 | 772 |
 | `faygolover.rplights.mixin` | 1 | 23 |
 | `faygolover.rplights.mixin.client` | 2 | 35 |
 | `faygolover.rplights.net` | 1 | 78 |
 | `faygolover.rplights.recipe` | 1 | 138 |
-| `faygolover.rplights.registry` | 1 | 110 |
+| `faygolover.rplights.registry` | 1 | 122 |
 | `faygolover.rplights.server` | 1 | 185 |
 
 ## 2. Классы
@@ -60,6 +60,7 @@
 - `AccumulatorItem`, 33 — Аккумулятор: 70 % обычной батарейки, заряжается в зарядном устройстве, изнашивается.
 - `DynamoItem`, 90 — Динамо-фонарик «жучок»: каждый жим (ПКМ) добавляет несколько секунд света, запас ограничен; яркость — по запасу, к концу желтеет.
 - `DynamoSqueeze`, 23 — Время последнего жима динамо у своего игрока — для подёргивания руки (клиент).
+- `HolderItem`, 208 — Пенал для маркеров и кольцо для ХИС: хранит только подходящие предметы (по правилу accepts), всего не больше capacity штук.
 - `InkToolItem`, 147 — Маркеры и губка: держишь ПКМ и ведёшь по блоку.
 - `LampItem`, 86 — Керосиновая лампа «Летучая мышь»: светит вокруг, носится в руке или на поясе (слот Curios «пояс»).
 - `LightItem`, 73 — Фонарь на батарейках: ПКМ — щелчок выключателем, Shift+ПКМ — батарейки / лампочка / режим (LightActions).
@@ -86,12 +87,12 @@
 - `LightRecipe`, 138 — Обслуживание фонаря в верстаке: фонарь + полный комплект батареек (обычных или аккумуляторов) — поменять батарейки; фонарь один — вынуть батарейки; ручной фонарь + лампочка — вкрутить новую; лампа + ведро керосина — заправить (вед…
 
 ### `faygolover.rplights.registry`
-- `LightItems`, 110 — *без описания*
+- `LightItems`, 122 — *без описания*
 
 ### `faygolover.rplights.server`
 - `LightTicker`, 185 — Сервер.
 
-Классов без описания: 1 из 36.
+Классов без описания: 1 из 37.
 
 ## 3. Подписки на события
 
@@ -150,4 +151,4 @@
 
 ## 10. Зарегистрированные id
 
-- `faygolover/rplights/registry/LightItems.java` (17): `hand_lantern` `old_flashlight` `headlamp` `uv_flashlight` `rgb_flashlight` `dynamo_flashlight` `hurricane_lamp` `uv_marker` `ink_sponge` `marker_` `accumulator` `bulb` `burnt_bulb` `battery_tester` `charger` `light_service` `lights`
+- `faygolover/rplights/registry/LightItems.java` (19): `hand_lantern` `old_flashlight` `headlamp` `uv_flashlight` `rgb_flashlight` `dynamo_flashlight` `hurricane_lamp` `uv_marker` `ink_sponge` `marker_` `marker_case` `glow_ring` `accumulator` `bulb` `burnt_bulb` `battery_tester` `charger` `light_service` `lights`

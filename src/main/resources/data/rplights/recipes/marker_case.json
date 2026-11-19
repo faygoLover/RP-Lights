@@ -1,0 +1,7 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": ["LLL", "LSL", "LLL"],
+  "key": {"L": {"item": "minecraft:leather"}, "S": {"item": "minecraft:string"}},
+  "result": {"item": "rplights:marker_case"}
+}

@@ -5,6 +5,7 @@ import faygolover.rplights.block.ChargerBlock;
 import faygolover.rplights.block.ChargerBlockEntity;
 import faygolover.rplights.block.LampBlock;
 import faygolover.rplights.block.LampBlockEntity;
+import faygolover.rplights.item.HolderItem;
 import faygolover.rplights.item.InkToolItem;
 import net.minecraft.world.level.material.PushReaction;
 import faygolover.rplights.item.AccumulatorItem;
@@ -75,6 +76,17 @@ public final class LightItems {
         }
         return java.util.List.copyOf(out);
     }
+
+
+    /** Пенал для маркеров (и УФ-маркера): до 5 штук, только они. */
+    public static final RegistryObject<Item> MARKER_CASE = ITEMS.register("marker_case",
+            () -> new HolderItem(one(), "marker_case", 5, s -> s.getItem() instanceof InkToolItem t && !t.sponge()));
+    /** Кольцо для ХИС мода Glow Sticks: до 30 штук любых цветов, только они. */
+    public static final RegistryObject<Item> GLOW_RING = ITEMS.register("glow_ring",
+            () -> new HolderItem(one(), "glow_ring", 30, s -> {
+                net.minecraft.resources.ResourceLocation k = ForgeRegistries.ITEMS.getKey(s.getItem());
+                return k != null && k.getNamespace().equals("glow_sticks") && k.getPath().startsWith("glow_stick_");
+            }));
 
     public static final RegistryObject<Item> ACCUMULATOR = ITEMS.register("accumulator", () -> new AccumulatorItem(new Item.Properties().stacksTo(16)));
     public static final RegistryObject<Item> BULB = ITEMS.register("bulb", () -> new Item(new Item.Properties().stacksTo(16)));

@@ -1,0 +1,7 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [" I ", "L L", " L "],
+  "key": {"I": {"item": "minecraft:iron_nugget"}, "L": {"item": "minecraft:leather"}},
+  "result": {"item": "rplights:glow_ring"}
+}

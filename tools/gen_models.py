@@ -904,6 +904,33 @@ def marker(colour):
     return m
 
 
+def marker_case():
+    """Пенал: тканевый брусок с молнией по верху, нашивка и бегунок."""
+    m = Model('marker_case')
+    cloth = paint('#3F4B3A', noise=0.06, k=0.3)
+    zip_m = paint('#B8BCC0', noise=0.04, k=0.0)
+    m.box((5.0, 5.0, 2.0), (11.0, 8.5, 14.0), cloth)
+    m.box((5.5, 8.5, 2.5), (10.5, 9.0, 13.5), cloth)
+    m.box((7.5, 9.0, 3.0), (8.5, 9.5, 13.0), zip_m)                                   # молния
+    m.box((7.0, 9.0, 3.5), (9.0, 10.0, 4.5), paint('#8A8F94', noise=0.05, k=0.2))     # бегунок
+    m.box((4.5, 6.0, 7.0), (5.0, 7.5, 9.0), paint('#C8302A', noise=0.05, k=0.2))      # нашивка
+    return m
+
+
+def glow_ring():
+    """Кольцо для ХИС: восьмиугольная резиновая петля, снизу три цветные палочки, сверху карабин."""
+    m = Model('glow_ring')
+    rub = paint('#2C2C30', noise=0.06, k=0.3)
+    for a, b in (((6.5, 11.5), (9.5, 13.0)), ((6.5, 3.0), (9.5, 4.5)), ((3.0, 6.5), (4.5, 9.5)),
+                 ((11.5, 6.5), (13.0, 9.5)), ((4.5, 9.5), (6.5, 11.5)), ((9.5, 9.5), (11.5, 11.5)),
+                 ((4.5, 4.5), (6.5, 6.5)), ((9.5, 4.5), (11.5, 6.5))):
+        m.box((a[0], a[1], 6.0), (b[0], b[1], 8.0), rub)
+    m.box((7.5, 13.0, 6.5), (8.5, 14.5, 7.5), chrome())                                  # карабин
+    for x, col in ((6.0, '#3BD16F'), (7.5, '#E8D43A'), (9.0, '#E8472A')):
+        m.box((x, 5.0, 6.5), (x + 1.0, 11.0, 7.5), flat(col), emit=True)                 # палочки в кольце
+    return m
+
+
 def sponge():
     """Губка: жёлтый поролон с порами и зелёный жёсткий слой."""
     m = Model('ink_sponge')
@@ -1015,6 +1042,10 @@ def main():
         mk = marker(colour)
         nm = 'marker_' + colour
         jdump(os.path.join(MOD_ITEM, nm + '.json'), build(mk, nm, display=held(mk, grip=(8.0, 8.0, 10.0))))
+    mc = marker_case()
+    jdump(os.path.join(MOD_ITEM, 'marker_case.json'), build(mc, 'marker_case', display=thing(mc, gui_fill=14.0)))
+    gr = glow_ring()
+    jdump(os.path.join(MOD_ITEM, 'glow_ring.json'), build(gr, 'glow_ring', display=thing(gr, gui_rotation=(15, 200, 0), gui_fill=14.0)))
     sp = sponge()
     jdump(os.path.join(MOD_ITEM, 'ink_sponge.json'), build(sp, 'ink_sponge', display=thing(sp, gui_fill=13.0)))
 
